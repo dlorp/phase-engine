@@ -25,39 +25,13 @@
 #ifdef PHASE_ENGINE_ENABLED
 
 #include "metric_energy.h"
+#include "circadian_lut.h"
 
-/*
- * Integer cosine lookup table (24 entries, one per hour)
- * Values scaled to ±1000 to preserve precision
- * cos(2π * hour / 24) * 1000
- * Peak at hour 14 (2 PM), trough at hour 2 (2 AM)
- */
-static const int16_t cosine_lut_24[24] = {
-    866,   // 00:00
-    707,   // 01:00
-    500,   // 02:00
-    259,   // 03:00
-    0,     // 04:00
-    -259,  // 05:00
-    -500,  // 06:00
-    -707,  // 07:00
-    -866,  // 08:00
-    -966,  // 09:00
-    -1000, // 10:00
-    -966,  // 11:00
-    -866,  // 12:00
-    -707,  // 13:00
-    -500,  // 14:00
-    -259,  // 15:00
-    0,     // 16:00
-    259,   // 17:00
-    500,   // 18:00
-    707,   // 19:00
-    866,   // 20:00
-    966,   // 21:00
-    1000,  // 22:00
-    966    // 23:00
-};
+// Chronotype offset: shifts circadian peak from default 2 PM (hour 14)
+// Set by web builder from active hours midpoint. Range: -4 to +4.
+#ifndef PHASE_CHRONOTYPE_OFFSET
+#define PHASE_CHRONOTYPE_OFFSET 0
+#endif
 
 // Activity bonus scaling factor (activity / 50 → max 20)
 #define ENERGY_ACTIVITY_DIVISOR 50
@@ -79,10 +53,12 @@ uint8_t metric_energy_compute(uint16_t phase_score, uint8_t sd_score, uint16_t r
         
     } else {
         // Fallback mode: Add circadian bonus (no accelerometer)
-        // Bonus = (-cosine_lut[hour] + 1000) / 100  →  range [0, 20]
-        // Negated to peak at hour 14 (2 PM), low at hour 2 (2 AM)
+        // Bonus = (circadian_lut[hour] + 1000) / 100  →  range [0, 20]
+        // circadian_lut_24 peaks at hour 14 (2 PM), trough at hour 2 (2 AM)
+        // Chronotype offset shifts peak to user's actual rhythm
         if (hour >= 24) hour = 23;  // Safety clamp
-        int16_t circ_raw = -cosine_lut_24[hour];  // Negate for correct phase
+        uint8_t chrono_hour = (hour + 24 - PHASE_CHRONOTYPE_OFFSET) % 24;
+        int16_t circ_raw = circadian_lut_24[chrono_hour];
         uint8_t circ_bonus = (uint8_t)((circ_raw + 1000) / 100);  // Map [-1000, +1000] → [0, 20]
         energy += circ_bonus;
     }
