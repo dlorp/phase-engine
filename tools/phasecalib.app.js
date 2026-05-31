@@ -124,6 +124,7 @@ function onScreenBlank() {
 
 // ── Display (event-driven, NOT periodic) ───────────────────
 function drawStatusBar(elapsed) {
+  elapsed = Math.floor(elapsed);
   g.setColor(AMBER);
   g.fillRect(R.x, R.y, R.x2, R.y+14);
 
@@ -182,32 +183,28 @@ function drawPrimaryReading() {
 }
 
 function drawSensorGrid() {
-  var qw = (R.w-4)>>1, qh = 26;
-  var qx0 = R.x, qy0 = R.y+84;
+  var qw = (R.w-4)>>1, qh = 24;
+  var qx0 = R.x, qy0 = R.y+80;
 
-  function quad(x, y, w, h, label, val, unit) {
-    g.setColor(CYAN); g.fillRect(x, y, x+w, y+h);
+  function quad(x, y, w, h, label, val) {
+    g.setColor(CYAN); g.fillRect(x, y, x+w-1, y+h-1);
     g.setColor(BLACK);
     g.setFont("6x8", 1); g.setFontAlign(0, -1);
     g.drawString(label, x+(w>>1), y+1);
     g.setColor(WHITE);
     g.setFont("Vector", 14);
-    g.drawString(val+unit, x+(w>>1), y+10);
+    g.drawString(val, x+(w>>1), y+10);
   }
 
-  quad(qx0, qy0, qw, qh, "TEMP",
-    latestTemp.toFixed(1),
-    " " + minmax.temp.min.toFixed(0) + ":" + minmax.temp.max.toFixed(0));
-  quad(qx0+qw+4, qy0, qw, qh, "PRESS",
-    latestPressure.toFixed(0),
-    " " + minmax.pressure.min.toFixed(0) + ":" + minmax.pressure.max.toFixed(0));
-  quad(qx0, qy0+qh+4, qw, qh, "ACCEL", latestAccel.mag.toFixed(2), "g");
+  quad(qx0, qy0, qw, qh, "TEMP", latestTemp.toFixed(1) + "C");
+  quad(qx0+qw+4, qy0, qw, qh, "PRESS", latestPressure.toFixed(0) + "h");
+  quad(qx0, qy0+qh+2, qw, qh, "ACCEL", latestAccel.mag.toFixed(2) + "g");
 
   g.setColor(CYAN);
-  g.fillRect(qx0+qw+4, qy0+qh+4, qx0+R.w, qy0+2*qh+4);
+  g.fillRect(qx0+qw+4, qy0+qh+2, R.x2, qy0+2*qh+1);
   g.setColor(BLACK);
   g.setFont("6x8", 1); g.setFontAlign(0, -1);
-  g.drawString("GPS", qx0+qw+4+(qw>>1), qy0+qh+5);
+  g.drawString("GPS", qx0+qw+4+(qw>>1), qy0+qh+3);
   g.setColor(WHITE);
   g.setFont("Vector", 14);
   var gpsText = latestGps.fix ? latestGps.fix+" sats" : "---";
@@ -216,11 +213,11 @@ function drawSensorGrid() {
       [8593,8598,8594,8600,8595,8601,8592,8600][Math.round(latestMag.heading/45)%8] || 8593
     );
   }
-  g.drawString(gpsText, qx0+qw+4+(qw>>1), qy0+qh+14);
+  g.drawString(gpsText, qx0+qw+4+(qw>>1), qy0+qh+12);
 }
 
 function drawWaveform() {
-  var wy0 = R.y2 - 24;
+  var wy0 = R.y2 - 20;
   g.setColor(AMBER);
   g.fillRect(R.x, wy0, R.x2, R.y2);
 
@@ -231,7 +228,7 @@ function drawWaveform() {
   var start, cnt;
   if (waveCount < 40) { start = 0; cnt = waveCount; }
   else { start = waveIdx; cnt = 40; }
-  for (i = 0; i < cnt; i++) {
+  for (var i = 0; i < cnt; i++) {
     vals.push(waveRing[(start + i) % 40]);
   }
 
@@ -306,8 +303,8 @@ Bangle.on('accel', function(a) {
   if (a.mag < minmax.accel.min) minmax.accel.min = a.mag;
   if (a.mag > minmax.accel.max) minmax.accel.max = a.mag;
 });
-Bangle.on('GPS', function(g) {
-  latestGps.lat = g.lat; latestGps.lon = g.lon; latestGps.fix = g.fix;
+Bangle.on('GPS', function(gps) {
+  latestGps.lat = gps.lat; latestGps.lon = gps.lon; latestGps.fix = gps.fix;
 });
 Bangle.on('mag', function(m) {
   latestMag.x = m.x; latestMag.y = m.y; latestMag.z = m.z;

@@ -1,39 +1,28 @@
-# second-movement Session Notes
+# Session Notes — hyph4 — 2026-05-31
 
-## 2026-05-28 [~15:00 AKDT] — Shared circadian LUT, chronotype offset, solarpunk scores, WK median filter
+## Task
+Fix 6 visual defects in Bangle.js 2 Phase Calib Logger (`tools/phasecalib.app.js`)
 
-**Status:** Complete
-**Agent:** hyph4
-**Type:** feature
-**Commits:** 1 this session
+## Work Completed
+1. **Bug 1** — Status bar seconds float precision: added `Math.floor(elapsed)` in drawStatusBar
+2. **Bug 2** — Sensor quad text overflow: reduced qh 26→24, qy0 offset 84→80, removed min:max suffix from quad calls, compact labels ("29.7C", "1020h"), R.x2 for fillRect right edge
+3. **Bug 3** — Grid/waveform overlap: wy0 offset 24→20 (2px clearance between grid end 153 and waveform start 155)
+4. **Bug 4** — GPS handler shadows graphics g: renamed parameter g→gps
+5. **Bug 5** — Missing var i: added `var` to first for-loop in drawWaveform (Espruino hoists function-wide)
+6. **Bug 6** — GPS fillRect off-by-one: qx0+R.w→R.x2 for one-pixel-correct right boundary
 
-### Executive Summary
-Implemented four Phase Engine improvements: extracted duplicated cosine LUT to a shared header (fixing a phase inconsistency where three subsystems diverged from the documented 2 PM circadian peak), added compile-time chronotype offset for web builder integration, defined solarpunk score label constants (Sol/Dew/Sap/Hum), and replaced the WK baseline simple average with a median-of-3 filter to prevent outlier days from dominating the 7-day baseline.
+## Files Modified
+- `tools/phasecalib.app.js` — 16 insertions, 19 deletions (+35/-19 diff)
 
-### Work Completed
-- **Shared circadian LUT:** Created `lib/phase/circadian_lut.h` with true cos(2π*(h-14)/24)*1000 values. Phase engine, metric_em, and metric_energy now share a single LUT. Eliminated 96 bytes of duplicated flash and fixed an undocumented phase inconsistency — the old phase_engine LUT peaked at hour 20 (8 PM), not hour 14 (2 PM) as the comment claimed.
-- **Chronotype offset:** Added `PHASE_CHRONOTYPE_OFFSET` compile-time define (default 0, range -4 to +4). Applied to all three LUT lookup sites. The web builder computes offset from active hours midpoint and injects it via CFLAGS. Zero RAM cost.
-- **Solarpunk score constants:** Created `lib/phase/scores.h` with `SCORE_LABEL_SOL`/`DEW`/`SAP`/`HUM` macros. All four pass the segment LCD position 1 character constraint. Includes documentation of metric-to-score mapping.
-- **WK baseline median filter:** Replaced 7-day simple average in `sleep_data.c` with median-of-middle-3 (bubble sort on stack, drop 2 highest and 2 lowest). Falls back to simple average when fewer than 5 valid days exist. Prevents a single hiking day from depressing the baseline for 6 days.
+## Verification
+- Seconds: `Math.floor(127.67)=127, 127%60=7, ("0"+7).substr(-2)="07"` ✓
+- TEMP: "29.7C" at Vector14 ≈35px fits in qw=86px ✓
+- PRESS: "1020h" at Vector14 ≈35px fits in qw=86px ✓
+- Layout: Grid ends 153, waveform starts 155 → 2px gap ✓
+- GPS: gps.lat/lon/fix — no shadow of global g ✓
+- var i: declared on first loop, hoisted function-wide ✓
 
-### Files Modified
-- `lib/phase/circadian_lut.h` — new: shared 24-entry cosine LUT with correct phase anchors
-- `lib/phase/scores.h` — new: Sol/Dew/Sap/Hum score label constants
-- `lib/phase/phase_engine.c` — replace local LUT with shared include + chronotype offset lookup
-- `lib/phase/sleep_data.c` — replace simple average WK baseline with median-of-3 filter
-- `lib/metrics/metric_em.c` — replace local LUT (and its negation) with shared include + chronotype offset
-- `lib/metrics/metric_energy.c` — replace local LUT with shared include + chronotype offset
-
-### Build Verification
-- `make BOARD=sensorwatch_blue DISPLAY=classic PHASE_ENGINE_ENABLED=1` — clean compile
-- Size: 153,716 text + 2,812 data + 7,028 bss = 163,556 bytes (well within 256KB flash)
-
-### Notes & Observations
-- The three old LUTs had different phase anchors: phase_engine peaked at hour 8 (value -1000, used with `1000+curve`), metric_em peaked at hour 10 (negated), metric_energy peaked at hour 10. The shared LUT unifies all three on hour 14 (2 PM), which matches documented human circadian alertness peak.
-- Stash applied from `main` required deduplication — `is_active_hours` and `phase_detect_anomalies` existed on both the stash source and the target branch.
-- SESSION_NOTES.md created as new file (repo had no prior session notes).
-
-### Next Steps
-- Bangle.js 2 calibration logger script (separate session)
-- Web builder: add PHASE_CHRONOTYPE_OFFSET computation from active hours midpoint
-- Update circadian_score_face.c to use SCORE_LABEL_* constants
+## Notes
+- All changes on `feature/chronotype-calibration-prep` branch
+- To test: upload to Bangle.js 2 Storage via Espruino Web IDE, flash via BLE
+- Min/max summary preserved on completion screen (unchanged section)
