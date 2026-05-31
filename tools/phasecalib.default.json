@@ -1,0 +1,11 @@
+{
+  "sampleInterval": 30,
+  "gpsInterval": 300,
+  "recordingDuration": 604800,
+  "minFreeBytes": 500000,
+  "brightness": 1,
+  "dimTimeout": 15,
+  "powerSaveBLE": false,
+  "sensors": ["accel","hrm","baro","gps"],
+  "filePrefix": "phase_calib_"
+}
