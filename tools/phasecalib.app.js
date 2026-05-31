@@ -274,7 +274,7 @@ function drawDisplay() {
   if (screenBlanked) return;
   var elapsed = recordingStart ? getTime()-recordingStart : 0;
 
-  g.reset();
+  g.clear(1);
 
   drawStatusBar(elapsed);
   drawPrimaryReading();
@@ -478,7 +478,7 @@ function stopRecording(reason) {
   }
 
   // Completion screen with min/max (nightwatch pattern)
-  g.reset();
+  g.clear(1);
   g.setColor(AMBER);
   g.setFont("Vector", 20); g.setFontAlign(0, 0);
   g.drawString("Recording", R.x+(R.w>>1), R.y+20);
@@ -511,21 +511,29 @@ function stopRecording(reason) {
   setTimeout(function() { Bangle.buzz(400, 0.5); }, 600);
 }
 
-// ── Button: long-press to stop ─────────────────────────────
+// ── Button: long-press to stop (setUI preferred over setWatch) ─
 var btnPressTime = 0;
-setWatch(function(e) {
-  if (e.state) {
-    btnPressTime = getTime();
-  } else {
-    if (getTime() - btnPressTime >= 2) {
-      Bangle.buzz(25);
-      stopRecording("Manual stop");
+try {
+  setWatch(function(e) {
+    if (e.state) {
+      btnPressTime = getTime();
+    } else {
+      if (getTime() - btnPressTime >= 2) {
+        Bangle.buzz(25);
+        stopRecording("Manual stop");
+      }
     }
-  }
-}, BTN1, { repeat:true, edge:"both" });
+  }, BTN1, { repeat:true, edge:"both" });
+} catch(e) {
+  console.log("setWatch unavailable, using setUI");
+  Bangle.setUI({ mode:"custom", btn:function() {
+    Bangle.buzz(25);
+    stopRecording("Manual stop");
+  }});
+}
 
 // ── Splash → Start ─────────────────────────────────────────
-g.reset();
+g.clear(1);
 g.setColor(AMBER);
 g.setFont("Vector", 22); g.setFontAlign(0, 0);
 g.drawString("Phase", R.x+(R.w>>1), R.y+(R.h>>1)-16);
