@@ -251,7 +251,7 @@ function drawSensorGrid() {
   quad(qx0, qy0+qh+2, qw, qh, "ACCEL", latestAccel.mag.toFixed(2) + "g");
 
   g.setColor(CYAN);
-  g.fillRect(qx0+qw+4, qy0+qh+2, R.x2, qy0+2*qh+1);
+  g.fillRect(qx0+qw+4, qy0+qh+2, R.x2, qy0+2*qh-3);
   g.setColor(BLACK);
   g.setFont("6x8", 1); g.setFontAlign(0, -1);
   g.drawString("GPS", qx0+qw+4+(qw>>1), qy0+qh+3);
@@ -267,7 +267,7 @@ function drawSensorGrid() {
 }
 
 function drawWaveform() {
-  var wy0 = R.y2 - 20;
+  var wy0 = R.y2 - 24;
   g.setColor(AMBER);
   g.fillRect(R.x, wy0, R.x2, R.y2);
 
@@ -298,6 +298,7 @@ function drawWaveform() {
     });
   } else {
     // Hand-drawn fallback (works without graph module)
+    g.setColor(BLACK);
     for (i = 0; i < 3; i++) {
       var ry = wy0 + 2 + i * 8;
       for (var dx = R.x; dx < R.x2; dx += 8)
