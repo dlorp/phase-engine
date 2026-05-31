@@ -235,16 +235,39 @@ function drawWaveform() {
     vals.push(waveRing[(start + i) % 40]);
   }
 
-  // Use built-in graph module (nightwatch pattern)
-  require("graph").drawLine(g, vals, {
-    x: R.x + 4, y: wy0 + 2,
-    width: R.w - 8, height: 20,
-    miny: minmax.accel.min,
-    maxy: minmax.accel.max,
-    axes: false,
-    grid: false,
-    color: BLACK
-  });
+  // Try graph module (nightwatch pattern), fall back to hand-drawn
+  var useGraph = false;
+  try { require("graph"); useGraph = true; } catch(e) {}
+
+  if (useGraph) {
+    require("graph").drawLine(g, vals, {
+      x: R.x + 4, y: wy0 + 2,
+      width: R.w - 8, height: 20,
+      miny: minmax.accel.min,
+      maxy: minmax.accel.max,
+      axes: false,
+      grid: false,
+      color: BLACK
+    });
+  } else {
+    // Hand-drawn fallback (works without graph module)
+    for (i = 0; i < 3; i++) {
+      var ry = wy0 + 2 + i * 8;
+      for (var dx = R.x; dx < R.x2; dx += 8)
+        g.drawLine(dx, ry, dx + 3, ry);
+    }
+    var px = R.x + 4;
+    var py = wy0 + 2 + 18 - (vals[0] - minmax.accel.min) /
+      (minmax.accel.max - minmax.accel.min || 1) * 16;
+    for (i = 1; i < vals.length; i++) {
+      var x = R.x + 4 + i * ((R.w - 8) / (vals.length - 1));
+      var y = wy0 + 2 + 18 - (vals[i] - minmax.accel.min) /
+        (minmax.accel.max - minmax.accel.min || 1) * 16;
+      y = Math.max(wy0 + 2, Math.min(wy0 + 18, Math.round(y)));
+      g.drawLine(px, py, x, y);
+      px = x; py = y;
+    }
+  }
 }
 
 function drawDisplay() {
