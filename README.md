@@ -134,6 +134,53 @@ Phase Engine can be disabled at compile time by omitting \`PHASE_ENGINE_ENABLED=
 
 Same as upstream Sensor Watch - MIT License.
 
+## Bangle.js 2 Calibration Logger
+
+A companion app for the [Bangle.js 2](https://www.espruino.com/Bangle.js2) smartwatch that logs multi-sensor data to CSV for Phase Engine calibration.
+
+**Sensors:** Accelerometer (12.5Hz), heart rate (VC31B PPG), barometer/temperature (BMP280/SPL06), GPS (AT6558), magnetometer/compass
+
+**CSV columns (21):** `ts, accel_x/y/z/mag/diff, hrm_bpm/confidence/raw/filt/ppg_raw/ppg_offset, mag_x/y/z/heading, temp_c, pressure_hpa, gps_lat/lon/fix`
+
+### Upload
+
+1. Open [Espruino Web IDE](https://www.espruino.com/ide/) in Chrome
+2. Connect via Web Bluetooth → Storage tab → upload `tools/phasecalib.app.js`
+3. Paste `tools/phasecalib-setup.js` into the left REPL panel, press Enter
+4. Long-press button → launcher → "PhaseCal"
+
+### Paired Calibration
+
+Wear both watches (Sensor Watch F91W + Bangle.js 2) on the same wrist. The F91W computes Phase Engine scores locally; the Bangle logs raw sensor data. Download the CSV via Web IDE Storage tab and cross-reference against F91W phase scores.
+
+### Display
+
+5-zone HDLS layout on the Bangle's 176×176 3-bit RGB LCD:
+- **Status bar** — elapsed time, sample counter, recording dot
+- **Primary reading** — HRM bpm or accel magnitude, confidence bar
+- **Sensor grid** — TEMP, PRESS, ACCEL, GPS with current values
+- **Waveform** — accelerometer sparkline via built-in graph module
+- **Min/max tracking** — session extremes shown during recording and on completion
+
+### Settings
+
+Configurable via `phasecalib.json` on the watch:
+- `sampleInterval` — CSV write interval (default 30s)
+- `gpsInterval` — GPS fix interval (default 300s)
+- `recordingDuration` — max session length (default 7 days)
+- `brightness` / `lcdTimeout` — power management
+- `wakeOnSample` — relight screen on each write
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `tools/phasecalib.app.js` | Main app (v3.10) |
+| `tools/phasecalib-setup.js` | Launcher registration + icon |
+| `tools/phasecalib.default.json` | Default settings |
+| `tools/bangle_calib_logger.js` | Archived v1 |
+| `tools/bangle_calib_logger_v2.js` | Archived v2 (grayscale bug) |
+
 ---
 
 **Note:** This is a personal fork with experimental circadian tracking features. For the official Sensor Watch firmware, see the [upstream repository](https://github.com/joeycastillo/Sensor-Watch).
