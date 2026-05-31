@@ -76,6 +76,14 @@ var screenTimer = null;
 var recDotVisible = true, screenBlanked = false;
 var waveRing = new Array(40), waveIdx = 0, waveCount = 0;
 
+// Min/max tracking (nightwatch pattern)
+var minmax = {
+  temp: { min: 99, max: -99 },
+  pressure: { min: 99999, max: 0 },
+  hrm: { min: 255, max: 0 },
+  accel: { min: 99, max: 0 }
+};
+
 // ── HDLS Colors (3-bit RGB LCD) ────────────────────────────
 var AMBER  = "#FFD700";  // yellow (110)
 var CYAN   = "#00FFFF";  // cyan (011)
@@ -187,8 +195,12 @@ function drawSensorGrid() {
     g.drawString(val+unit, x+(w>>1), y+10);
   }
 
-  quad(qx0, qy0, qw, qh, "TEMP", latestTemp.toFixed(1), "C");
-  quad(qx0+qw+4, qy0, qw, qh, "PRESS", latestPressure.toFixed(0), "hPa");
+  quad(qx0, qy0, qw, qh, "TEMP",
+    latestTemp.toFixed(1),
+    " " + minmax.temp.min.toFixed(0) + ":" + minmax.temp.max.toFixed(0));
+  quad(qx0+qw+4, qy0, qw, qh, "PRESS",
+    latestPressure.toFixed(0),
+    " " + minmax.pressure.min.toFixed(0) + ":" + minmax.pressure.max.toFixed(0));
   quad(qx0, qy0+qh+4, qw, qh, "ACCEL", latestAccel.mag.toFixed(2), "g");
 
   g.setColor(CYAN);
@@ -208,34 +220,31 @@ function drawSensorGrid() {
 }
 
 function drawWaveform() {
-  var wy0 = R.y2-24;
+  var wy0 = R.y2 - 24;
   g.setColor(AMBER);
   g.fillRect(R.x, wy0, R.x2, R.y2);
 
-  g.setColor(BLACK);
-  for (var i = 0; i < 3; i++) {
-    var ry = wy0+4 + i*8;
-    for (var dx = R.x; dx < R.x2; dx += 8)
-      g.drawLine(dx, ry, dx+3, ry);
+  if (waveCount < 2) return;
+
+  // Build values array from ring buffer (oldest → newest)
+  var vals = [];
+  var start, cnt;
+  if (waveCount < 40) { start = 0; cnt = waveCount; }
+  else { start = waveIdx; cnt = 40; }
+  for (i = 0; i < cnt; i++) {
+    vals.push(waveRing[(start + i) % 40]);
   }
 
-  if (waveCount >= 2) {
-    var start, cnt;
-    if (waveCount < 40) { start = 0; cnt = waveCount; }
-    else { start = waveIdx; cnt = 40; }
-    var px = R.x+4;
-    var py = wy0+20 - waveRing[start]*8;
-    py = Math.max(wy0+4, Math.min(wy0+20, Math.round(py)));
-    var step = (R.w-8)/(cnt-1);
-    for (var i = 1; i < cnt; i++) {
-      var ri = (start+i)%40;
-      var x = R.x+4 + i*step;
-      var y = wy0+20 - waveRing[ri]*8;
-      y = Math.max(wy0+4, Math.min(wy0+20, Math.round(y)));
-      g.drawLine(px, py, x, y);
-      px = x; py = y;
-    }
-  }
+  // Use built-in graph module (nightwatch pattern)
+  require("graph").drawLine(g, vals, {
+    x: R.x + 4, y: wy0 + 2,
+    width: R.w - 8, height: 20,
+    miny: minmax.accel.min,
+    maxy: minmax.accel.max,
+    axes: false,
+    grid: false,
+    color: BLACK
+  });
 }
 
 function drawDisplay() {
@@ -255,6 +264,10 @@ function drawDisplay() {
 // ── Sensor Handlers ────────────────────────────────────────
 Bangle.on('HRM', function(h) {
   hrmBpm = h.bpm; hrmConfidence = h.confidence;
+  if (h.bpm > 0) {
+    if (h.bpm < minmax.hrm.min) minmax.hrm.min = h.bpm;
+    if (h.bpm > minmax.hrm.max) minmax.hrm.max = h.bpm;
+  }
 });
 Bangle.on('HRM-raw', function(h) {
   hrmRaw = h.raw || 0; hrmFilt = h.filt || 0;
@@ -267,6 +280,8 @@ Bangle.on('accel', function(a) {
   waveRing[waveIdx] = a.mag;
   waveIdx = (waveIdx+1) % 40;
   if (waveCount < 40) waveCount++;
+  if (a.mag < minmax.accel.min) minmax.accel.min = a.mag;
+  if (a.mag > minmax.accel.max) minmax.accel.max = a.mag;
 });
 Bangle.on('GPS', function(g) {
   latestGps.lat = g.lat; latestGps.lon = g.lon; latestGps.fix = g.fix;
@@ -281,6 +296,10 @@ function samplePressure() {
     Bangle.getPressure().then(function(p) {
       latestTemp = p.temperature;
       latestPressure = p.pressure;
+      if (p.temperature < minmax.temp.min) minmax.temp.min = p.temperature;
+      if (p.temperature > minmax.temp.max) minmax.temp.max = p.temperature;
+      if (p.pressure < minmax.pressure.min) minmax.pressure.min = p.pressure;
+      if (p.pressure > minmax.pressure.max) minmax.pressure.max = p.pressure;
     }).catch(function(){});
   } catch(e) {
     latestTemp = E.getTemperature();
@@ -375,6 +394,7 @@ function startRecording() {
 
   Bangle.setHRMPower(1);
   Bangle.setBarometerPower(1);
+  Bangle.setCompassPower(1);
   wakeScreen();
 
   // Haptic
@@ -418,6 +438,7 @@ function stopRecording(reason) {
 
   Bangle.setHRMPower(0);
   Bangle.setBarometerPower(0);
+  Bangle.setCompassPower(0);
   Bangle.setGPSPower(0);
   gpsPowerOn = false;
   Bangle.setLCDBrightness(0);
@@ -433,16 +454,33 @@ function stopRecording(reason) {
     file = null;
   }
 
-  // Completion screen
+  // Completion screen with min/max (nightwatch pattern)
   g.reset();
   g.setColor(AMBER);
-  g.setFont("Vector", 24); g.setFontAlign(0, 0);
-  g.drawString("Recording", R.x+(R.w>>1), R.y+(R.h>>1)-16);
-  g.drawString("Complete", R.x+(R.w>>1), R.y+(R.h>>1)+10);
+  g.setFont("Vector", 20); g.setFontAlign(0, 0);
+  g.drawString("Recording", R.x+(R.w>>1), R.y+20);
+  g.drawString("Complete", R.x+(R.w>>1), R.y+44);
   g.setColor(WHITE);
   g.setFont("6x8", 1); g.setFontAlign(0, -1);
-  g.drawString(reason, R.x+(R.w>>1), R.y+(R.h>>1)+40);
-  g.drawString(sampleCount + " samples", R.x+(R.w>>1), R.y+(R.h>>1)+54);
+  g.drawString(reason, R.x+(R.w>>1), R.y+68);
+  g.drawString(sampleCount + " samples", R.x+(R.w>>1), R.y+82);
+  // Min/max summary
+  g.setColor(CYAN);
+  var t = minmax.temp, p = minmax.pressure;
+  var h = minmax.hrm, a = minmax.accel;
+  g.drawString(
+    "T:" + t.min.toFixed(0) + "-" + t.max.toFixed(0) + "C  " +
+    "P:" + p.min.toFixed(0) + "-" + p.max.toFixed(0),
+    R.x+(R.w>>1), R.y+102
+  );
+  g.drawString(
+    "HR:" + (h.min<255?h.min:"--") + "-" + (h.max||"--") + "bpm  " +
+    "G:" + a.min.toFixed(1) + "-" + a.max.toFixed(1),
+    R.x+(R.w>>1), R.y+118
+  );
+  g.setColor(CYAN);
+  g.setFont("6x8", 1);
+  g.drawString("Download CSV via Web IDE", R.x+(R.w>>1), R.y+140);
   g.flip();
 
   Bangle.buzz(200, 0.5);
