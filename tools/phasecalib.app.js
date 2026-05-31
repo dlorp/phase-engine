@@ -75,6 +75,7 @@ var sampleTimer = null, gpsTimer = null;
 var screenTimer = null;
 var recDotVisible = true, screenBlanked = false;
 var waveRing = new Array(40), waveIdx = 0, waveCount = 0;
+var metricIndex = 0;  // 0=HRM, 1=Accel, 2=Temp, 3=Press
 
 // Min/max tracking (nightwatch pattern)
 var minmax = {
@@ -122,6 +123,16 @@ function onScreenBlank() {
   Bangle.setLCDBrightness(0);
 }
 
+// ── Touch: tap center to cycle metric ───────────────────────
+Bangle.on('touch', function(btn, xy) {
+  if (!xy || screenBlanked) return;
+  // Only respond to taps in center band (avoid top status bar + bottom waveform)
+  if (xy.y > R.y+14 && xy.y < R.y2-28) {
+    metricIndex = (metricIndex + 1) % 4;
+    wakeScreen();
+  }
+});
+
 // ── Display (event-driven, NOT periodic) ───────────────────
 function drawStatusBar(elapsed) {
   elapsed = Math.floor(elapsed);
@@ -155,11 +166,29 @@ function drawStatusBar(elapsed) {
 
 function drawPrimaryReading() {
   var cx = R.x + (R.w>>1);
-  var reading, unit;
-  if (hrmBpm > 0 && hrmConfidence > 30) {
-    reading = String(hrmBpm); unit = "bpm";
-  } else {
-    reading = latestAccel.mag.toFixed(2); unit = "g";
+  var reading, unit, label;
+
+  switch (metricIndex) {
+    case 0: // HRM
+      if (hrmBpm > 0 && hrmConfidence > 30) {
+        reading = String(hrmBpm); unit = "bpm";
+      } else {
+        reading = "--"; unit = "bpm";
+      }
+      label = "HR";
+      break;
+    case 1: // Accel
+      reading = latestAccel.mag.toFixed(2); unit = "g";
+      label = "G";
+      break;
+    case 2: // Temp
+      reading = latestTemp.toFixed(1); unit = "C";
+      label = "T";
+      break;
+    case 3: // Press
+      reading = latestPressure.toFixed(0); unit = "hPa";
+      label = "P";
+      break;
   }
 
   g.setColor(WHITE);
@@ -169,15 +198,36 @@ function drawPrimaryReading() {
   g.setFont("Vector", 16);
   g.drawString(unit, cx, R.y+52);
 
-  // HRM confidence bar (zambretti segmented indicator)
-  var segs = 7, filled = Math.round(hrmConfidence/100*segs);
-  var barX = cx-34, barY = R.y+70;
-  for (var i = 0; i < segs; i++) {
-    var sx = barX + i*10;
-    if (i < filled) {
-      g.setColor(AMBER); g.fillRect(sx, barY, sx+7, barY+9);
+  // Metric label (top-left of center area)
+  g.setColor(AMBER);
+  g.setFont("6x8", 1); g.setFontAlign(-1, -1);
+  g.drawString(label, R.x+2, R.y+20);
+
+  // Pips showing which metric is active
+  var pipY = R.y+66, pipX0 = cx - 18;
+  for (var p = 0; p < 4; p++) {
+    if (p === metricIndex) {
+      g.setColor(AMBER);
+      g.fillCircle(pipX0 + p*12, pipY, 3);
     } else {
-      g.setColor(CYAN); g.drawRect(sx, barY, sx+7, barY+9);
+      g.setColor(CYAN);
+      g.drawCircle(pipX0 + p*12, pipY, 3);
+    }
+  }
+
+  // HRM confidence pips (when on HRM metric)
+  if (metricIndex === 0 && hrmBpm > 0) {
+    var segs = 7, filled = Math.round(hrmConfidence/100*segs);
+    var barX = cx - 24, barY = R.y+72;
+    g.setFont("4x6", 1); g.setFontAlign(0, -1);
+    g.drawString("sig", cx, barY-8);
+    for (var i = 0; i < segs; i++) {
+      var sx = barX + i*8;
+      if (i < filled) {
+        g.setColor(AMBER); g.fillCircle(sx+2, barY+3, 2);
+      } else {
+        g.setColor(CYAN); g.drawCircle(sx+2, barY+3, 2);
+      }
     }
   }
 }
@@ -348,7 +398,13 @@ function checkStorage() {
 }
 
 function openFile() {
-  try { file = S.open(settings.filePrefix + "0.csv", "a"); }
+  // Ensure phasecalib/ directory exists
+  try { S.write("phasecalib/.keep", ""); } catch(e) {}
+  var now = new Date();
+  var dateStr = now.getFullYear() +
+    ("0"+(now.getMonth()+1)).substr(-2) +
+    ("0"+now.getDate()).substr(-2);
+  try { file = S.open("phasecalib/" + settings.filePrefix + dateStr + ".csv", "a"); }
   catch(e) { file = null; }
 }
 
