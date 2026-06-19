@@ -38,3 +38,25 @@ all_flash_sizes.json
 # Session notes — local-only, never committed
 SESSION_NOTES.md
 
+
+# Hardened
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.DS_Store
+._*
+*.swp
+*.swo
+*~
+*.bak
+*.log
+*.tmp
+*.partial
+Thumbs.db
+build/
+*.o
+*.elf
+*.hex
+*.map
