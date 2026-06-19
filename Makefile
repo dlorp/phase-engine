@@ -132,6 +132,7 @@ SRCS += \
   ./lib/phase/sensors.c \
   ./lib/phase/sleep_data.c \
   ./lib/phase/zone_words.c \
+  ./lib/phase/psg_tones.c \
   ./lib/metrics/metrics.c \
   ./lib/metrics/metric_sd.c \
   ./lib/metrics/metric_em.c \
