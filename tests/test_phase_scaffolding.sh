@@ -3,7 +3,7 @@
 # Verifies that phase engine compiles with zero cost when disabled,
 # and compiles successfully when enabled.
 
-set -e
+set -euo pipefail
 
 echo "======================================================================"
 echo "Phase Watch Scaffolding Test (Phase 1)"

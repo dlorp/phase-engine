@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Phase 3 PR 6: End-to-End Integration Test
 # Tests the complete Phase 3 system integration
 

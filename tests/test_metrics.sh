@@ -2,7 +2,7 @@
 # Test script for Phase 3A PR 2 metrics (EM, WK, Energy)
 # Tests all three new metrics with boundary conditions and fallback modes
 
-set -e
+set -euo pipefail
 
 echo "=== Phase 3A PR 2 Metrics Test Suite ==="
 echo ""

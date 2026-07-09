@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Quick verification of zone word implementation
 
 echo "=== Zone Word Display System Verification ==="

@@ -2,7 +2,7 @@
 # Playlist Controller Test Suite
 # Tests zone determination, hysteresis, relevance calculation, and face rotation
 
-set -e
+set -euo pipefail
 
 echo "=== Playlist Controller Test Suite ==="
 echo ""
