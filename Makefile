@@ -134,6 +134,7 @@ SRCS += \
   ./lib/phase/zone_words.c \
   ./lib/phase/psg_tones.c \
   ./lib/phase/rls_filter.c \
+  ./lib/phase/pid_tuner.c \
   ./lib/metrics/metrics.c \
   ./lib/metrics/metric_sd.c \
   ./lib/metrics/metric_em.c \
