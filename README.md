@@ -8,19 +8,19 @@ Phase Engine transforms your Sensor Watch into a **circadian awareness tool**, t
 
 ### The Four Phases
 
-**🌅 Emergence** (Dawn)
+**Emergence** (Dawn)
 - Morning transition and mental clarity
 - Best for: Planning, creative thinking, learning
 
-**⚡ Active** (Peak Performance)  
+**Active** (Peak Performance)  
 - Maximum energy and focus
 - Best for: Physical activity, complex tasks, meetings
 
-**🔥 Momentum** (Sustained Output)
+**Momentum** (Sustained Output)
 - Consistent productivity phase
 - Best for: Execution, collaboration, routine work
 
-**🌙 Descent** (Recovery)
+**Descent** (Recovery)
 - Wind-down and restoration
 - Best for: Reflection, light tasks, rest preparation
 
