@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -66,8 +67,9 @@ static void roundtrip_case(const char *name, uint16_t n,
         if (re[i] != orig_re[i] || im[i] != orig_im[i]) {
             exact = 0;
             if (failures < 20) {
-                printf("  [detail] n=%u i=%u got=(%d,%d) want=(%d,%d)\n", n, i,
-                       re[i], im[i], orig_re[i], orig_im[i]);
+                printf("  [detail] n=%u i=%u got=(%" PRId32 ",%" PRId32
+                       ") want=(%" PRId32 ",%" PRId32 ")\n",
+                       n, i, re[i], im[i], orig_re[i], orig_im[i]);
             }
             break;
         }
@@ -120,7 +122,8 @@ static void spectrum_case(uint16_t n, int freq, int32_t amp) {
         }
     }
     snprintf(msg, sizeof(msg),
-             "spectrum (n=%u f=%d): noise floor below -40 dB (worst=%u peak=%u)",
+             "spectrum (n=%u f=%d): noise floor below -40 dB (worst=%" PRIu32
+             " peak=%" PRIu32 ")",
              n, freq, worst, peak);
     CHECK(worst * 10000ull <= (uint64_t)peak, msg);
 
