@@ -24,8 +24,10 @@
  *     even), so the round trip is the identity.
  *
  * Size: max N = INT_FFT_MAX_N (default 32, power of two). RAM = 2 * n * 4
- * bytes caller-provided (256 bytes for n=32). Flash = LUT (16 entries x 6
- * bytes) + ~300 bytes code at -Os.
+ * bytes caller-provided (256 bytes for n=32), 0 B static. Flash = LUT
+ * (16 entries x 8 bytes = 128 B .rodata, padded for alignment -- not 6 B/
+ * entry) + ~760 B .text at -Os (~892 B total; see
+ * docs/PHASE_ENGINE_INTEGER_FFT.md for the measured build).
  *
  * References:
  *   - Oraintara, Chen, Nguyen (2002), "Integer fast Fourier transform",
