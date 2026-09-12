@@ -121,6 +121,27 @@ static int run_scenario(const scenario_t *s) {
         return (strstr(s->name, "insufficient") != NULL) ? 0 : 1;
     }
 
+    /* Regression guard: ki_q8 must be Kp/Ti rounded to nearest, not
+     * truncated toward zero. A truncating division silently zeroes out
+     * small-but-nonzero integral gains (see round_div_i64 in pid_tuner.c);
+     * this test previously had no assertion on any fitted/tuned value. */
+    {
+        int64_t ti_ms = (res.status == PID_TUNE_OK)
+            ? (int64_t)res.time_const_ms + (int64_t)res.dead_time_ms / 2
+            : (int64_t)2 * (int64_t)res.dead_time_ms;
+        if (ti_ms > 0) {
+            double expected = (double)res.kp_q8 / (double)ti_ms;
+            double diff = absd((double)res.ki_q8 - expected);
+            if (diff > 0.5 + 1e-9) {
+                printf("FAIL: ki_q8=%d is not Kp/Ti rounded to nearest "
+                       "(kp_q8=%d Ti=%lldms, expected ~= %.3f)\n",
+                       res.ki_q8, res.kp_q8, (long long)ti_ms, expected);
+                free(plant.delay_fifo);
+                return 1;
+            }
+        }
+    }
+
     /* ---- closed loop with tuned gains ---------------------------------- */
     pid_controller_t c;
     pid_controller_init(&c, res.kp_q8, res.ki_q8, res.kd_q8,

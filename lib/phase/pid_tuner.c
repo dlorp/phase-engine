@@ -41,6 +41,19 @@ static int32_t clamp_q8(int32_t v) {
     return v;
 }
 
+/* Round-to-nearest (ties away from zero) integer division. `den` must be
+ * > 0. Plain `/` truncates toward zero, which for ki_q8 = kp_q8/ti_ms can
+ * knock a small-but-nonzero true ratio down to exactly 0 (killing integral
+ * action silently) or lose ~1 LSB worth of Q8 precision on every tuning
+ * run — this recovers that LSB. */
+static int32_t round_div_i64(int64_t num, int64_t den) {
+    if (den <= 0) return 0;
+    if (num >= 0) {
+        return (int32_t)((num + den / 2) / den);
+    }
+    return -(int32_t)((-num + den / 2) / den);
+}
+
 /* Find the time (ms) at which the response first reaches `frac_permille`
  * (0-1000) of the total response, by linear interpolation between samples.
  * Returns 0 if the threshold is never reached. */
@@ -138,8 +151,9 @@ static void imc_tune(const int32_t process_gain_q15,
     int32_t ki_q8 = 0;
     int64_t ti_ms = (int64_t)T_ms + half_L;   /* Ti = T + L/2 */
     if (ti_ms > 0 && kp_q8 != 0) {
-        /* ki_q8 = Ki*256 = (Kp/Ti)*256 = kp_q8 / Ti */
-        ki_q8 = (int32_t)(((int64_t)kp_q8) / ti_ms);
+        /* ki_q8 = Ki*256 = (Kp/Ti)*256 = kp_q8 / Ti, rounded to nearest
+         * (see round_div_i64) rather than truncated toward zero. */
+        ki_q8 = round_div_i64((int64_t)kp_q8, ti_ms);
     }
 
     int32_t kd_q8 = 0;
@@ -181,8 +195,9 @@ static void zn_tune(const int32_t process_gain_q15,
     int32_t ki_q8 = 0;
     int64_t ti_ms = (int64_t)2 * (int64_t)L_ms;   /* Ti = 2L */
     if (ti_ms > 0 && kp_q8 != 0) {
-        /* ki_q8 = Ki*256 = (Kp/Ti)*256 = kp_q8 / Ti */
-        ki_q8 = (int32_t)(((int64_t)kp_q8) / ti_ms);
+        /* ki_q8 = Ki*256 = (Kp/Ti)*256 = kp_q8 / Ti, rounded to nearest
+         * (see round_div_i64) rather than truncated toward zero. */
+        ki_q8 = round_div_i64((int64_t)kp_q8, ti_ms);
     }
 
     int32_t kd_q8 = 0;

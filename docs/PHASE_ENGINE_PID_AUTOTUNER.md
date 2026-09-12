@@ -1,7 +1,7 @@
 # Phase Engine Notebook: Data-Driven PID Auto-Tuning
 
 **Date:** 2026-08-30
-**Source vault entry:** `control-theory/2026-07-16-mipt-ml-pid-tuning-ru.md` (MIPT paper: ML methods learn PID coefficients from system response data; automatic tuning replaces manual Ziegler-Nichols)
+**Source vault entry:** `control-theory/2026-07-16-mipt-ml-pid-tuning-ru.md` (MIPT paper on ML-based PID tuning). Note: this implementation is classical control theory, not machine learning — FOPDT curve identification feeding IMC (Rivera/Morari/Skogestad 1986) with a Ziegler-Nichols 1942 open-loop fallback, i.e. the ZN method the vault paper frames ML as superseding is used here as the fallback path itself. "Data-driven" below means "gains fit from measured step-response samples," not learned coefficients.
 **Task:** Phase Engine improvement only. Keep existing Lyapunov/circadian control work intact.
 
 ## What was added
@@ -57,13 +57,17 @@ Plant: K=0.20, T=1.0s, L=0.2s. 64 samples @ 50ms = 3.2s (~3T past dead time).
 ```
 Tune status : IMC (data-driven)
 Fitted model: K=0.187 (true 0.200)  T=762ms (true 1000)  L=200ms (true 200)
-Tuned gains : Kp=15.895  Ki=0.015625/ms  Kd=1398.719*ms
-Closed loop: settle=1600ms  overshoot=0.1%  final err=0.00
+Tuned gains : Kp=15.895  Ki=0.019531/ms  Kd=1398.719*ms
+Closed loop: settle=1250ms  overshoot=0.2%  final err=0.40
 ```
 
 Outcome: dead time identified exactly; K within 6.5%; T within 24% (integer
-quantization of samples). Closed loop tracks setpoint with zero steady-state
-error, negligible overshoot, settling at ~1.6s for a T=1s plant.
+quantization of samples). Closed loop tracks setpoint with negligible
+steady-state error (0.40 on a 0-1000 scale) and overshoot, settling at
+~1.25s for a T=1s plant. (Ki was previously 0.015625/ms from a truncating
+division that dropped the fractional LSB of the Q8 gain; `round_div_i64`
+now rounds to nearest, which shifted these closed-loop numbers slightly —
+see `pid_tuner.c`.)
 
 ### Scenario 2: partial response -> Ziegler-Nichols fallback
 Plant: K=0.20, T=2.0s, L=0.3s. 64 samples @ 50ms = 3.2s (~1.5T past dead time,
