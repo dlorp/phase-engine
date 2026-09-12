@@ -27,13 +27,24 @@
  *     (datasheet-first, register-level, no vendor framework overhead)
  *
  * Stability analysis:
- *   - AEMA: Lyapunov-stable. The EMA is an IIR filter with |pole| < 1
- *     (alpha ∈ [alpha_min, alpha_max] ⊂ (0, 1)). The adaptation only
- *     changes the pole location within this stable range.
- *   - RLS: BIBO-stable. The forgetting factor λ ∈ (0, 1] ensures the
- *     inverse correlation matrix P remains positive definite. The
- *     diagonal approximation preserves this property per-element.
- *     The leaky factor γ ∈ (0, 1) prevents coefficient wind-up.
+ *   - AEMA: stable by construction. Each update is a convex combination
+ *     ema_new = (1-alpha)*ema + alpha*input with alpha clamped to
+ *     [alpha_min, alpha_max] subset (0, 1) -- the output can never leave
+ *     the range spanned by past inputs, regardless of how alpha varies.
+ *   - RLS (diagonal-P approximation): NOT proven stable in this fixed-point
+ *     form -- treat the P update as heuristic, not guaranteed. The vault
+ *     source cited above (signal-processing/2026-07-01-rls-adaptive-filters-dsp-chapter)
+ *     lists fixed-point RLS numerical stability as an open question; this
+ *     implementation does not resolve it. In particular, P is not proven
+ *     to stay positive: `p[i] < 0` is treated as a reachable condition
+ *     (see the reset-to-1.0 branch in rls_update()), not a `shouldn't
+ *     happen` defensive-only case. The leaky factor γ ∈ (0, 1) and the
+ *     explicit clamp on p[i] bound the damage (P can't grow or go negative
+ *     unboundedly) but do not constitute a stability proof. This filter
+ *     is not currently wired into the sensor pipeline and has no
+ *     dedicated test coverage (see tests/test_rls_filter.sh) -- do not
+ *     enable it in the live pipeline without adding regression tests
+ *     that exercise P over many iterations first.
  */
 
 #ifndef RLS_FILTER_H_
@@ -132,7 +143,7 @@ int32_t aema_get_alpha(const aema_state_t *state, int16_t input);
  *   3. Compute output: y = Σ w[i]*x[i]
  *   4. Compute error: e = d - y (desired = raw sample for smoothing)
  *   5. Update weights: w[i] = w[i] + k[i]*e
- *   6. Update P: p[i] = (p[i] - k[i]²*x[i]²) / λ (leaky: * γ)
+ *   6. Update P: p[i] = (p[i] - k[i]*p[i]*x[i]) / λ (leaky: * γ)
  *
  * For sensor smoothing, the "desired" signal is the raw sensor reading.
  * The filter learns to predict the next sample from the past N samples.

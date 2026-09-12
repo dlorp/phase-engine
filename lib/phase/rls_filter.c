@@ -213,7 +213,7 @@ int16_t rls_update(rls_state_t *state, int16_t input) {
 
     /* Temporary arrays for input values (needed for gain computation) */
     int16_t x[RLS_ORDER];
-    int32_t px2[RLS_ORDER];  /* p[i] * x[i]² (for gain numerator) */
+    int64_t px2[RLS_ORDER];  /* p[i] * x[i]² (for gain numerator) */
 
     for (uint8_t i = 0; i < RLS_ORDER; i++) {
         uint8_t buf_idx = (state->idx + i) % RLS_ORDER;
@@ -223,11 +223,13 @@ int16_t rls_update(rls_state_t *state, int16_t input) {
         output += ((int32_t)state->w[i] * (int32_t)x[i]) >> 15;
 
         /* p[i] * x[i]² for gain denominator
-         * x[i]² max ≈ 32767² = 1,073,676,289 (fits int32_t if p[i] is small)
-         * But p[i] * x[i]² can overflow int32, so we use int64 */
+         * x[i]² max ≈ 32767² = 1,073,676,289. p[i] can reach its clamp
+         * ceiling of 2^25 (see Step 5 below), so p[i]*x[i]² can reach
+         * ~2^55 before the >>15 -- i.e. ~2^40 after it. That does not
+         * fit int32_t (silently truncates), so px2[] is kept in int64_t. */
         int32_t x2 = (int32_t)x[i] * (int32_t)x[i];
-        px2[i] = (int32_t)(((int64_t)state->p[i] * (int64_t)x2) >> 15);
-        denom += (int64_t)px2[i];
+        px2[i] = ((int64_t)state->p[i] * (int64_t)x2) >> 15;
+        denom += px2[i];
     }
 
     /* ------------------------------------------------------------------
@@ -273,19 +275,30 @@ int16_t rls_update(rls_state_t *state, int16_t input) {
         /* ------------------------------------------------------------------
          * Step 5: Update P (diagonal, with leaky factor)
          *
-         * p[i] = (p[i] - k[i]² * x[i]²) / λ * γ
+         * Standard diagonal-RLS recursion: p[i] = (p[i] - k[i]*p[i]*x[i]) / λ * γ.
+         * The correction term is k[i]*p[i]*x[i] = k[i]*k_num (k_num was
+         * computed above as p[i]*x[i], the gain numerator). This was
+         * previously implemented as k[i]²*x[i]², which drops the p[i]
+         * dependence entirely and does not reduce to the correct
+         * recursion -- fixed here to use k_num directly.
          *
-         * The leaky factor γ < 1 prevents P from growing unboundedly
-         * during stationary signals (sensor noise floor).
-         *
-         * k[i]² is Q30, x[i]² is in units². The product needs careful
-         * scaling to avoid overflow.
+         * k_i is Q15 (per the gain computation above: k_i = (k_num<<15)/denom,
+         * i.e. k_i*denom ~= k_num<<15). k_num is Q15(p) * raw(x). The >>15
+         * removes k_i's own Q15 scale, leaving the correction in the same
+         * units as k_num/p[i], consistent with how p[i] is used elsewhere
+         * in this function.
          * ------------------------------------------------------------------ */
 
-        /* k[i]² * x[i]² — scale to prevent overflow */
-        int64_t k2 = (int64_t)k_i * (int64_t)k_i;
-        int64_t x2 = (int64_t)x[i] * (int64_t)x[i];
-        int64_t p_correction = (k2 * x2) >> 30;  /* Scale down */
+        /* k[i] * k_num = k[i] * p[i] * x[i], descaled by k[i]'s Q15 factor.
+         * Magnitude check: k_i is bounded to roughly +/-2^15..2^30 depending
+         * on how small x[i] is relative to p[i] (denom >= this tap's own
+         * p[i]*x[i]^2 term, which bounds k_i); k_num is bounded by p[i]'s
+         * clamp ceiling (2^25) times x[i]'s int16 range (~2^15), i.e. ~2^40.
+         * The product stays well under int64 range in both directions,
+         * unlike multiplying by denom directly (denom sums across all taps
+         * plus lambda*delta, and k_i^2*denom can exceed 2^63 at extreme
+         * p[i]/x[i] combinations). */
+        int64_t p_correction = ((int64_t)k_i * k_num) >> 15;
 
         /* Update P with leaky factor: p = (p - correction) * γ / λ */
         int64_t new_p = (int64_t)state->p[i] - p_correction;
