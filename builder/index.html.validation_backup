@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; connect-src 'self' api.github.com github.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; connect-src 'self' api.github.com github.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -114,7 +114,7 @@
         html, body {
             width: 100%;
             min-height: 100%;
-            background: transparent;
+            background: var(--color-bg);
             color: var(--color-amber-mid);
             font-family: var(--font-mono);
             font-size: 11px;
@@ -2388,65 +2388,9 @@ let wireframeMesh;
 let animationFrameId;
 let crtQuality = 'medium'; // medium, minimal, off
 
-function cleanupRetroScene() {
-    // Cancel animation loop
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-    
-    // Dispose Three.js resources
-    if (wireframeMesh) {
-        if (wireframeMesh.geometry) wireframeMesh.geometry.dispose();
-        if (wireframeMesh.material) wireframeMesh.material.dispose();
-        wireframeMesh = null;
-    }
-    
-    if (scene) {
-        scene.clear();
-        scene = null;
-    }
-    
-    if (composer) {
-        composer = null;
-    }
-    
-    if (renderer) {
-        renderer.dispose();
-        renderer = null;
-    }
-    
-    // Clear shader passes
-    scanlinesPass = null;
-    barrelPass = null;
-    chromaticPass = null;
-    vignettePass = null;
-    bloomPass = null;
-}
-
 function applyCRTAppearanceMode(quality) {
     const crtOff = quality === 'off';
     document.documentElement.classList.toggle('crt-effects-off', crtOff);
-    
-    // Update global quality setting
-    crtQuality = quality === 'auto' ? (getDeviceTier() === 'low' ? 'minimal' : 'medium') : quality;
-    
-    // Clean up existing scene
-    cleanupRetroScene();
-    
-    // Reinitialize if not off
-    if (!crtOff) {
-        const canvas = document.getElementById('retro-canvas');
-        if (canvas) {
-            canvas.style.display = '';
-            initRetroScene();
-        }
-    } else {
-        const canvas = document.getElementById('retro-canvas');
-        if (canvas) {
-            canvas.style.display = 'none';
-        }
-    }
 }
 
 function initRetroScene() {
@@ -2457,7 +2401,7 @@ function initRetroScene() {
     const VALID_QUALITIES = ['auto', 'off', 'minimal', 'medium'];
     const savedQualityRaw = localStorage.getItem('crt-quality');
     const savedQuality = VALID_QUALITIES.includes(savedQualityRaw) ? savedQualityRaw : 'auto';
-    document.documentElement.classList.toggle('crt-effects-off', savedQuality === 'off');
+    applyCRTAppearanceMode(savedQuality);
     
     // Determine CRT quality based on user preference or device tier
     if (savedQuality === 'auto') {
@@ -4186,7 +4130,7 @@ async function init() {
             
             // Update label
             // Notify user to reload (console only, no alert)
-            console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- applying immediately');
+            console.log('[CRT] Quality changed to:', quality.toUpperCase(), '- reload page to apply');
         });
     });
     
@@ -5360,66 +5304,11 @@ function genBuildId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-// ============================================================
-// VALIDATION
-// ============================================================
-function validateConfiguration() {
-    const warnings = [];
-    const errors = [];
-    
-    // Check Phase Engine vs Homebase
-    const phaseEnabled = state.phaseEngineEnabled;
-    const latitude = state.homebaseLat;
-    const longitude = state.homebaseLon;
-    
-    if (phaseEnabled) {
-        // Check for missing homebase
-        if (latitude === null && longitude === null) {
-            errors.push('Phase Engine enabled but homebase coordinates not set');
-        }
-        
-        // Check coordinate bounds
-        if (latitude !== null && (latitude < -90 || latitude > 90)) {
-            errors.push('Invalid latitude (must be -90 to 90)');
-        }
-        if (longitude !== null && (longitude < -180 || longitude > 180)) {
-            errors.push('Invalid longitude (must be -180 to 180)');
-        }
-        
-        // Warn if homebase looks like placeholder
-        if (latitude !== null && longitude !== null) {
-            if (Math.abs(latitude) < 0.001 && Math.abs(longitude) < 0.001) {
-                warnings.push('Homebase coordinates look like placeholder values');
-            }
-        }
-    }
-    
-    return { warnings, errors };
-}
-
-
 async function triggerBuild() {
     const token = getToken();
     if (!token) {
         showStatus('[ERR] ENTER GITHUB PAT IN TOKEN FIELD ABOVE', 'error');
         return;
-    }
-
-    // Validate configuration before building
-    const validation = validateConfiguration();
-    if (validation.errors.length > 0) {
-        const errorMsg = validation.errors.join('\n');
-        showStatus('[ERR] ' + errorMsg, 'error');
-        alert('Configuration Errors:\n\n' + errorMsg + '\n\nPlease fix these issues before building.');
-        return;
-    }
-    
-    if (validation.warnings.length > 0) {
-        const warningMsg = validation.warnings.join('\n');
-        if (!confirm('Configuration Warnings:\n\n' + warningMsg + '\n\nContinue anyway?')) {
-            showStatus('[WARN] Build cancelled by user', 'error');
-            return;
-        }
     }
 
     const faces = state.activeFaces.filter(id => id !== '__secondary__' && id !== '__tertiary__');

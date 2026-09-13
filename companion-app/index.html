@@ -748,6 +748,11 @@
                 <textarea id="hexInput" placeholder="PASTE 574 HEX CHARS"></textarea>
             </div>
 
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+                <button id="listenBtn" onclick="listenForFESK()" style="flex:1;border-color:var(--color-alert);color:var(--color-alert)">🎤 LISTEN</button>
+                <span id="listenStatus" style="font-size:10px;color:var(--color-amber-dim);align-self:center">HOLD PHONE TO WATCH BUZZER</span>
+            </div>
+
             <div id="rx-status" style="display:none"></div>
 
             <div id="csDashboard" style="display:none">
@@ -1168,6 +1173,133 @@ document.addEventListener('visibilitychange', () => {
 const decoder = new FESKDecoder();
 let currentNights = null;
 let currentCS     = null;
+
+/* FESK ACOUSTIC RECEIVER — Goertzel filter bank for 4-FSK tones */
+const FESK_TONES = {
+  'D7':  2349,  // dibit 00
+  'E7':  2637,  // dibit 01
+  'F7#': 2960,  // dibit 10
+  'G7#': 3322   // dibit 11
+};
+
+const FESK_CODE_TABLE = 'abcdefghijklmnopqrstuvwxyz0123456789 ,:\'"\n';
+//           codes:   0         1         2         3         4
+
+let listenActive = false;
+let audioCtx = null;
+
+function goertzel(samples, targetFreq, sampleRate) {
+  const N = samples.length;
+  const k = Math.round(targetFreq * N / sampleRate);
+  const omega = 2.0 * Math.PI * k / N;
+  const coeff = 2.0 * Math.cos(omega);
+  let q1 = 0, q2 = 0;
+  for (let i = 0; i < N; i++) {
+    const q0 = coeff * q1 - q2 + samples[i];
+    q2 = q1;
+    q1 = q0;
+  }
+  return q1 * q1 + q2 * q2 - coeff * q1 * q2;
+}
+
+function detectSymbol(samples, sampleRate) {
+  const tones = Object.values(FESK_TONES);
+  let bestTone = 0, bestMag = -1;
+  for (let t = 0; t < tones.length; t++) {
+    const mag = goertzel(samples, tones[t], sampleRate);
+    if (mag > bestMag) { bestMag = mag; bestTone = t; }
+  }
+  return bestTone; // 0=00, 1=01, 2=10, 3=11
+}
+
+async function listenForFESK() {
+  if (listenActive) {
+    listenActive = false;
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    document.getElementById('listenBtn').textContent = '🎤 LISTEN';
+    document.getElementById('listenStatus').textContent = 'STOPPED';
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 8000 });
+    const source = audioCtx.createMediaStreamSource(stream);
+    const processor = audioCtx.createScriptProcessor(1024, 1, 1);
+
+    listenActive = true;
+    document.getElementById('listenBtn').textContent = '⏹ STOP';
+    document.getElementById('listenStatus').textContent = 'LISTENING...';
+
+    const sampleRate = 8000;
+    const windowSize = 400;  // 50ms @ 8kHz
+    let buffer = new Float32Array(0);
+    let symbols = [];  // accumulated 2-bit symbols
+    let hexOutput = '';
+    let bits = 0;
+    let bitCount = 0;
+
+    processor.onaudioprocess = function(e) {
+      if (!listenActive) return;
+      const input = e.inputBuffer.getChannelData(0);
+      const combined = new Float32Array(buffer.length + input.length);
+      combined.set(buffer);
+      combined.set(input, buffer.length);
+
+      while (combined.length >= windowSize) {
+        const window = combined.slice(0, windowSize);
+        const symbol = detectSymbol(window, sampleRate);
+        symbols.push(symbol);
+
+        // Accumulate bits (2 bits per 4-FSK symbol)
+        bits = (bits << 2) | symbol;
+        bitCount += 2;
+
+        // 6 bits = one FESK character
+        if (bitCount >= 6) {
+          const code = (bits >> (bitCount - 6)) & 0x3F;
+          bitCount -= 6;
+          bits &= (1 << bitCount) - 1;
+
+          if (code < FESK_CODE_TABLE.length) {
+            hexOutput += code.toString(16).padStart(2, '0');
+            document.getElementById('hexInput').value = hexOutput;
+            document.getElementById('listenStatus').textContent =
+              `RECEIVED ${hexOutput.length} CHARS`;
+          }
+        }
+
+        // Hop by half window
+        const hop = windowSize >> 1;
+        combined.set(combined.subarray(hop));
+        combined.length -= hop;
+      }
+      buffer = combined;
+    };
+
+    source.connect(processor);
+    processor.connect(audioCtx.destination);
+
+    // Auto-stop after 60 seconds of silence or when hex reaches 574
+    const checkTimer = setInterval(() => {
+      if (!listenActive) { clearInterval(checkTimer); return; }
+      if (hexOutput.length >= 574) {
+        listenActive = false;
+        if (audioCtx) { audioCtx.close(); audioCtx = null; }
+        stream.getTracks().forEach(t => t.stop());
+        clearInterval(checkTimer);
+        document.getElementById('listenBtn').textContent = '🎤 LISTEN';
+        document.getElementById('listenStatus').textContent = '[OK] 574 CHARS — READY TO DECODE';
+        decodeData();
+      }
+    }, 500);
+
+  } catch(err) {
+    document.getElementById('listenStatus').textContent = `[ERR] ${err.message.toUpperCase()}`;
+    document.getElementById('listenBtn').textContent = '🎤 LISTEN';
+    listenActive = false;
+  }
+}
 
 async function decodeData() {
     const hex = document.getElementById('hexInput').value;
