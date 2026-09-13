@@ -59,11 +59,6 @@ on:
         required: false
         default: true
         type: boolean
-      signal_tune:
-        description: "Signal tune define (e.g. SIGNAL_TUNE_DEFAULT)"
-        required: false
-        default: "SIGNAL_TUNE_DEFAULT"
-        type: string
       hourly_chime_tune:
         description: "Hourly chime tune (e.g. SIGNAL_TUNE_DEFAULT)"
         required: false
@@ -184,7 +179,6 @@ jobs:
           INPUT_LED_BLUE: ${{ github.event.inputs.led_blue }}
           INPUT_SMOOTH_LED_FADE: ${{ github.event.inputs.smooth_led_fade }}
           INPUT_BUTTON_SOUND: ${{ github.event.inputs.button_sound }}
-          INPUT_SIGNAL_TUNE: ${{ github.event.inputs.signal_tune }}
           INPUT_HOURLY_CHIME_TUNE: ${{ github.event.inputs.hourly_chime_tune }}
           INPUT_ALARM_TUNE: ${{ github.event.inputs.alarm_tune }}
           INPUT_SMART_ALARM_TUNE: ${{ github.event.inputs.smart_alarm_tune }}
@@ -211,7 +205,6 @@ jobs:
             --led-blue "$INPUT_LED_BLUE" \
             --smooth-led-fade "$INPUT_SMOOTH_LED_FADE" \
             --button-sound "$INPUT_BUTTON_SOUND" \
-            --signal-tune "$INPUT_SIGNAL_TUNE" \
             --hourly-chime-tune "$INPUT_HOURLY_CHIME_TUNE" \
             --alarm-tune "$INPUT_ALARM_TUNE" \
             --smart-alarm-tune "$INPUT_SMART_ALARM_TUNE" \
