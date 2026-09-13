@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Security Fix Script for PR #63
 # Restores input validation that was removed between ddff5dd and HEAD
 

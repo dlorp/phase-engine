@@ -2,7 +2,7 @@
 # Test script for Phase 3C PR 4: Zone Faces
 # Verifies compilation, display constraints, and basic structure
 
-set -e
+set -euo pipefail
 
 echo "=== Zone Faces Test Suite ==="
 echo ""

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 #
 # This transforms a CSV file into a gnuplot file.
 # use option '-h' to display a help screen for all options.

@@ -285,22 +285,42 @@ void wk_baseline_update_daily(wk_baseline_t *wk, uint16_t daily_movement) {
     // Advance circular buffer index
     wk->day_index = (wk->day_index + 1) % 7;
     
-    // Recompute baseline: average movements per hour over valid days
-    uint32_t sum = 0;
-    uint8_t valid_days = 0;
-    
+    // Recompute baseline: median of middle 3 (drop 2 highest, 2 lowest)
+    // Simple bubble sort on stack — 7 elements is cheap
+    uint16_t sorted[7];
     for (uint8_t i = 0; i < 7; i++) {
-        if (wk->daily_totals[i] > 0) {
-            sum += wk->daily_totals[i];
-            valid_days++;
+        sorted[i] = wk->daily_totals[i];
+    }
+    for (uint8_t i = 0; i < 6; i++) {
+        for (uint8_t j = 0; j < 6 - i; j++) {
+            if (sorted[j] > sorted[j + 1]) {
+                uint16_t tmp = sorted[j];
+                sorted[j] = sorted[j + 1];
+                sorted[j + 1] = tmp;
+            }
         }
     }
     
-    if (valid_days > 0) {
-        // Baseline = average hourly movement (assume 16 active hours per day)
-        // Integer math: sum / (valid_days * 16)
-        uint32_t total_hours = (uint32_t)valid_days * 16;
-        wk->baseline_per_hour = (uint8_t)(sum / total_hours);
+    // Median of middle 3: positions 2, 3, 4 (indices after dropping top 2, bottom 2)
+    // If fewer than 5 valid days, fall back to simple average
+    uint8_t valid_days = 0;
+    for (uint8_t i = 0; i < 7; i++) {
+        if (sorted[i] > 0) valid_days++;
+    }
+    
+    uint32_t divisor;
+    if (valid_days >= 5) {
+        // Use median 3: sorted[2], sorted[3], sorted[4] (skip 0-1 and 5-6)
+        uint32_t med_sum = (uint32_t)sorted[2] + sorted[3] + sorted[4];
+        divisor = (uint32_t)3;
+        wk->baseline_per_hour = (uint8_t)(med_sum / (divisor * 16));
+    } else if (valid_days > 0) {
+        // Not enough data for median — use simple average
+        uint32_t sum = 0;
+        for (uint8_t i = 0; i < 7; i++) {
+            sum += sorted[i];
+        }
+        wk->baseline_per_hour = (uint8_t)(sum / ((uint32_t)valid_days * 16));
     } else {
         // No history: use sensible default (30 movements/hour)
         wk->baseline_per_hour = 30;

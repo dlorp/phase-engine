@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "rls_filter.h"
 
 #ifdef PHASE_ENGINE_ENABLED
 
@@ -37,9 +38,15 @@
   #define HAS_LIGHT_SENSOR 0
 #endif
 
+// Lux filter constants — now using adaptive EMA (AEMA) from rls_filter.h
+// The fixed EMA constants (LUX_EMA_SHIFT, LUX_EMA_MUL) are removed.
+// See aema_init_custom() in sensors_init() for the new parameters.
+// Legacy: LUX_STUCK_THRESHOLD retained for stuck-sensor detection.
+
+#define LUX_STUCK_THRESHOLD 20  // Consecutive identical readings = stuck sensor
+
 #define SENSOR_MOTION_BUFFER_SIZE 5
 #define SENSOR_INACTIVITY_MIN 15
-#define SENSOR_LUX_BUFFER_SIZE 5    // PR #66: 5 samples = 5-min window at 1/min
 
 // Forward-declared in metrics.h
 struct sensor_state_t {
@@ -54,11 +61,19 @@ struct sensor_state_t {
     uint16_t motion_intensity;
     bool     has_accelerometer;
     
-    // Lux state (PR #66)
-    uint16_t lux_buffer[SENSOR_LUX_BUFFER_SIZE];
-    uint8_t  lux_buf_idx;
-    uint8_t  lux_buf_count;
-    uint16_t lux_avg;
+    // Lux state — Adaptive EMA filter (replaces fixed EMA from PR #66)
+    // Adapts smoothing based on prediction error: fast tracking during
+    // light transitions (indoor/outdoor), heavy smoothing during stable periods.
+    // See rls_filter.h for algorithm and stability analysis.
+    aema_state_t lux_aema;         // Adaptive EMA for lux filtering (12 bytes)
+    uint16_t lux_raw;              // Most recent raw sample
+    uint8_t  lux_stuck_count;      // Consecutive identical raw readings
+    bool     lux_sensor_healthy;   // false if stuck or no sensor
+    
+    // Motion intensity — Adaptive EMA filter (replaces fixed EMA from PR #65)
+    // Same adaptation logic as lux: tracks fast motion events while smoothing
+    // noise during rest periods.
+    aema_state_t motion_aema;      // Adaptive EMA for motion intensity (12 bytes)
     
     // Temperature state (PR #66)
     int16_t temperature_c10;
@@ -80,10 +95,11 @@ uint16_t sensors_get_motion_variance(const struct sensor_state_t *state);
 uint16_t sensors_get_motion_intensity(const struct sensor_state_t *state);
 bool sensors_is_motion_active(const struct sensor_state_t *state);
 
-// PR #66: Lux + Temperature
+// PR #66: Lux + Temperature (lux now uses EMA filter)
 void sensors_sample_lux(struct sensor_state_t *state);
 void sensors_sample_temperature(struct sensor_state_t *state);
-uint16_t sensors_get_lux_avg(const struct sensor_state_t *state);
+uint16_t sensors_get_lux(const struct sensor_state_t *state);
+bool sensors_is_lux_healthy(const struct sensor_state_t *state);
 int16_t sensors_get_temperature_c10(const struct sensor_state_t *state);
 
 // Phase 4E: Sleep tracking helpers

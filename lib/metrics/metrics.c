@@ -91,7 +91,7 @@ void metrics_update(metrics_engine_t *engine,
     
     // Extract sensor values (with fallback defaults if sensors is NULL)
     int16_t temp_c10 = sensors ? (int16_t)sensors_get_temperature_c10(sensors) : 200;
-    uint16_t light_lux = sensors ? sensors_get_lux_avg(sensors) : 0;
+    uint16_t light_lux = sensors ? sensors_get_lux(sensors) : 0;
     uint16_t activity_variance = sensors ? sensors_get_motion_variance(sensors) : 50;
     uint16_t activity_level = sensors ? sensors_get_motion_intensity(sensors) : 0;
     

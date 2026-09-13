@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Test script for PR #66: Lux + Temperature Integration
 # Validates build-time board detection and compilation for different boards
 
@@ -83,15 +84,15 @@ if [ $TESTS_PASSED -eq $TESTS_TOTAL ]; then
     echo ""
     echo "Pro board (with light sensor):"
     echo "  1. Flash firmware to sensorwatch_pro"
-    echo "  2. Cover light sensor → lux_avg should decrease over 5 minutes"
-    echo "  3. Expose to bright light → lux_avg should increase over 5 minutes"
-    echo "  4. Quick flash with flashlight → lux_avg should resist spike (rolling avg)"
-    echo "  5. Indoor lighting: expect lux_avg ~50-500"
-    echo "  6. Outdoor sunlight: expect lux_avg ~2000-10000"
+    echo "  2. Cover light sensor → lux_ema should decrease (EMA, ~4 samples to 95%)"
+    echo "  3. Expose to bright light → lux_ema should increase (converges faster than rolling avg)"
+    echo "  4. Quick flash with flashlight → lux_ema resists spike (EMA pole at 0.75)"
+    echo "  5. Indoor lighting: expect lux_ema ~50-500"
+    echo "  6. Outdoor sunlight: expect lux_ema ~2000-10000"
     echo ""
     echo "Non-Pro boards (Green/Red/Blue - no light sensor):"
     echo "  1. Flash firmware to board"
-    echo "  2. Verify lux_avg stays at 0 (no sensor)"
+    echo "  2. Verify lux_ema stays at 0 (no sensor, sensor_healthy = false)"
     echo "  3. Verify no runtime overhead from disabled lux code"
     echo ""
     echo "All boards (temperature):"

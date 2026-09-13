@@ -11,45 +11,19 @@
  */
 
 #include "phase_engine.h"
-
 #ifdef PHASE_ENGINE_ENABLED
 
 #include "homebase.h"
 #include "watch.h"
 #include <string.h>
+#include "circadian_lut.h"
 
-/*
- * Integer cosine lookup table (24 entries, one per hour)
- * Values scaled to ±1000 to preserve precision
- * cos(2π * (hour - 14) / 24) * 1000
- * Peak at hour 14 (2 PM), trough at hour 2 (2 AM)
- */
-static const int16_t cosine_lut_24[24] = {
-    500,   // 00:00
-    259,   // 01:00
-    0,     // 02:00 (TROUGH)
-    -259,  // 03:00
-    -500,  // 04:00
-    -707,  // 05:00
-    -866,  // 06:00
-    -966,  // 07:00
-    -1000, // 08:00
-    -966,  // 09:00
-    -866,  // 10:00
-    -707,  // 11:00
-    -500,  // 12:00
-    -259,  // 13:00
-    0,     // 14:00 (PEAK)
-    259,   // 15:00
-    500,   // 16:00
-    707,   // 17:00
-    866,   // 18:00
-    966,   // 19:00
-    1000,  // 20:00
-    966,   // 21:00
-    866,   // 22:00
-    707    // 23:00
-};
+// Chronotype offset: shifts circadian peak from default 2 PM (hour 14)
+// Set by web builder from active hours midpoint. Range: -4 to +4.
+// Negative = earlier chronotype (lark), positive = later (owl).
+#ifndef PHASE_CHRONOTYPE_OFFSET
+#define PHASE_CHRONOTYPE_OFFSET 0
+#endif
 
 void phase_engine_init(phase_state_t *state) {
     // Clear all state
@@ -85,7 +59,9 @@ uint16_t phase_compute(phase_state_t *state,
     
     // Calculate circadian curve (expected activity level at this hour)
     // Peak at 14:00 (afternoon), trough at 02:00 (night)
-    int16_t circadian_curve = cosine_lut_24[hour];
+    // Chronotype offset shifts peak: negative = lark (earlier), positive = owl (later)
+    uint8_t chrono_hour = (hour + 24 - PHASE_CHRONOTYPE_OFFSET) % 24;
+    int16_t circadian_curve = circadian_lut_24[chrono_hour];
     
     // Expected activity: baseline * circadian_curve
     // baseline.seasonal_baseline is 0-100

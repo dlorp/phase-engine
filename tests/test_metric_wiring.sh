@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Phase 4A PR #67: Metric Engine Sensor Wiring - End-to-End Test
 # 
 # Purpose: Validate that sensor readings propagate to metrics correctly
@@ -89,10 +90,10 @@ else
 fi
 
 info "Checking metrics.c extracts lux from sensors..."
-if grep -q "sensors_get_lux_avg(sensors)" lib/metrics/metrics.c; then
-    test_result 0 "metrics.c calls sensors_get_lux_avg()"
+if grep -q "sensors_get_lux(sensors)" lib/metrics/metrics.c; then
+    test_result 0 "metrics.c calls sensors_get_lux()"
 else
-    test_result 1 "metrics.c missing sensors_get_lux_avg() call"
+    test_result 1 "metrics.c missing sensors_get_lux() call"
 fi
 
 info "Checking movement.c passes sensors to metrics_update..."
@@ -192,7 +193,7 @@ echo ""
 echo "Summary:"
 echo "  ✓ Builds successfully for Pro and non-Pro boards"
 echo "  ✓ Comfort metric uses real temperature (sensors_get_temperature_c10)"
-echo "  ✓ Comfort metric uses real lux (sensors_get_lux_avg)"
+echo "  ✓ Comfort metric uses real lux (sensors_get_lux)"
 echo "  ✓ Motion sensors placeholder ready for PR #65"
 echo "  ✓ SD and Energy metrics unchanged"
 echo "  ✓ No anomaly detection (deferred to Phase 4B)"
