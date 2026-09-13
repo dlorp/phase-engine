@@ -405,6 +405,18 @@ PHASE_ENGINE_ENABLED = 1   # Enable playlist controller
 
 ---
 
+## Related Phase Engine Modules
+
+This file documents the Playlist Controller specifically. Other `lib/phase/`
+modules have their own dedicated docs:
+
+- `pid_tuner.c/.h` — data-driven PID auto-tuner, see
+  `docs/PHASE_ENGINE_PID_AUTOTUNER.md`
+- `int_fft.c/.h` — reversible integer FFT for spectral analysis, see
+  `docs/PHASE_ENGINE_INTEGER_FFT.md`
+- `rls_filter.c/.h` — adaptive EMA (live) + RLS filter (not yet wired in),
+  see `docs/PHASE_ENGINE_RLS_AEMA_FILTER.md`
+
 ## References
 
 - `PHASE3_IMPLEMENTATION_PLAN.md` — Overall Phase 3 architecture

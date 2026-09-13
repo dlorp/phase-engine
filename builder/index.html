@@ -2653,7 +2653,7 @@ window.addEventListener('beforeunload', () => {
 // ============================================================
 // CONSTANTS
 // ============================================================
-const REPO = 'dlorp/second-movement';
+const REPO = 'dlorp/phase-engine';
 const WORKFLOW_ID = 'custom-build.yml';
 const COOLDOWN_MS = 90 * 1000;
 const POLL_INTERVAL_MS = 5000;
@@ -2671,8 +2671,7 @@ const DISPLAYS = [
 ];
 
 const BRANCHES = [
-    { id: 'main', name: 'MAIN', description: 'Stable release branch' },
-    { id: 'phase4bc-playlist-dispatch', name: 'PHASE4BC', description: 'Dogfooding: Phase 4E/4F + LED fade' }
+    { id: 'main', name: 'MAIN', description: 'Stable release branch' }
 ];
 
 const VALID_BOARDS = BOARDS.map(b => b.id);
@@ -2689,7 +2688,19 @@ const VALID_SIGNAL_TUNES = [
     'SIGNAL_TUNE_HARRY_POTTER_SHORT',
     'SIGNAL_TUNE_HARRY_POTTER_LONG',
     'SIGNAL_TUNE_JURASSIC_PARK',
-    'SIGNAL_TUNE_EVANGELION'
+    'SIGNAL_TUNE_EVANGELION',
+    'SIGNAL_TUNE_NOKIA',
+    'SIGNAL_TUNE_TETRIS',
+    'SIGNAL_TUNE_IMPERIAL',
+    'SIGNAL_TUNE_POKEMON',
+    'SIGNAL_TUNE_VICTORY',
+    'SIGNAL_TUNE_TRITONE',
+    'SIGNAL_TUNE_SOSUMI',
+    'SIGNAL_TUNE_OLDPHONE',
+    'SIGNAL_TUNE_MGS_ALERT',
+    'SIGNAL_TUNE_SONIC',
+    'SIGNAL_TUNE_PACMAN',
+    'SIGNAL_TUNE_WINERROR'
 ];
 
 // Note frequencies (Hz) — from BUZZER_NOTE_* in watch_tcc.h
@@ -2714,7 +2725,9 @@ const NOTE_FREQUENCIES = {
     'F#G5':739.99, 'D#E5':622.25, 'G#A4':415.30, 'G#A5':830.61,
     'F#G6':1479.98, 'A#B5':932.33, 'D#E6':1244.51, 'A#B7':3729.31,
     'F#G4':369.99, 'G#A6':1661.22, 'A#B6':1864.66, 'D#E4':311.13,
-    'A#B4':466.16, 'F#G3':185, 'G#A3':207.65
+    'A#B4':466.16, 'F#G3':185, 'G#A3':207.65,
+    'C#D3':138.59, 'D#E3':155.56, 'A#B3':233.08,
+    'C#D4':277.18, 'C#D5':554.37, 'C#D6':1108.73
 };
 
 // Signal tune data — note sequences from movement_custom_signal_tunes.h
@@ -2741,7 +2754,31 @@ const SIGNAL_TUNES = [
     { id:'SIGNAL_TUNE_JURASSIC_PARK',    name:'Jurassic Park',
       notes:[['B5',7],['REST',7],['A#B5',7],['REST',7],['B5',13],['REST',13],['F#G5',13],['REST',13],['E5',13],['REST',13]] },
     { id:'SIGNAL_TUNE_EVANGELION',       name:"A Cruel Angel's Thesis (NGE)",
-      notes:[['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['C6',8],['D6',8],['REST',8],['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['E6',16]] }
+      notes:[['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['C6',8],['D6',8],['REST',8],['G5',8],['A5',8],['C6',8],['REST',4],['A5',4],['E6',16]] },
+    { id:'SIGNAL_TUNE_NOKIA',            name:'Nokia Ringtone',
+      notes:[['E6',8],['D6',8],['F#G5',16],['G#A5',16],['REST',4],['C#D6',8],['B5',8],['D5',16],['E5',16],['REST',4]] },
+    { id:'SIGNAL_TUNE_TETRIS',           name:'Tetris Theme',
+      notes:[['E5',12],['B4',6],['C5',6],['D5',12],['C5',6],['B4',6],['A4',12],['REST',2],['A4',6],['C5',6],['E5',12],['D5',6],['C5',6],['B4',12],['REST',2],['C5',6],['D5',12],['E5',12],['C5',12],['A4',12],['A4',16]] },
+    { id:'SIGNAL_TUNE_IMPERIAL',         name:'Imperial March',
+      notes:[['G5',12],['G5',12],['G5',12],['REST',2],['D#E5',10],['A#B5',4],['G5',12],['REST',2],['D#E5',10],['A#B5',4],['G5',20]] },
+    { id:'SIGNAL_TUNE_POKEMON',          name:'Pokemon Center',
+      notes:[['C6',6],['E6',6],['G6',6],['C7',6],['E7',6],['REST',4],['G6',6],['E6',6],['C6',10]] },
+    { id:'SIGNAL_TUNE_VICTORY',          name:'Victory Fanfare',
+      notes:[['C6',6],['C6',6],['C6',6],['C6',12],['REST',4],['G#A5',6],['A#B5',6],['C6',20]] },
+    { id:'SIGNAL_TUNE_TRITONE',          name:'Tritone Alert',
+      notes:[['A5',8],['E6',8],['A6',16]] },
+    { id:'SIGNAL_TUNE_SOSUMI',           name:'Sosumi',
+      notes:[['C6',4],['G5',4],['E5',4],['C5',8]] },
+    { id:'SIGNAL_TUNE_OLDPHONE',         name:'Old Phone Ring',
+      notes:[['E5',8],['G5',8],['E5',8],['G5',8],['REST',8],['E5',8],['G5',8],['E5',8],['G5',8]] },
+    { id:'SIGNAL_TUNE_MGS_ALERT',        name:'MGS Alert',
+      notes:[['B6',8]] },
+    { id:'SIGNAL_TUNE_SONIC',            name:'Sonic Ring',
+      notes:[['E6',3],['G6',3],['C7',6]] },
+    { id:'SIGNAL_TUNE_PACMAN',           name:'Pac-Man Chromatic',
+      notes:[['C6',2],['B5',2],['A#B5',2],['A5',2],['G#A5',2],['G5',2],['F#G5',2],['F5',2],['E5',2],['D#E5',2],['D5',2],['C#D5',2],['C5',2],['B4',2],['A#B4',2],['A4',2],['G#A4',2],['G4',2],['F#G4',2],['F4',2],['E4',2],['D#E4',2],['D4',2],['C#D4',2],['C4',2],['B3',2],['A#B3',2],['A3',2],['G#A3',2],['G3',2],['F#G3',2],['F3',2],['E3',2],['D#E3',2],['D3',2],['C#D3',2],['C3',4]] },
+    { id:'SIGNAL_TUNE_WINERROR',         name:'Windows Error',
+      notes:[['C4',10],['G3',10],['C4',10]] }
 ];
 
 // ============================================================
@@ -3209,7 +3246,7 @@ let registry = null;
 let state = {
     board: 'sensorwatch_red',
     display: 'classic',
-    branch: 'main',  // Build branch (main or phase4bc-playlist-dispatch)
+    branch: 'main',  // Build branch (only main is offered)
     activeFaces: [], // array of face ids (includes '__secondary__' divider sentinel)
     clock24h: false,
     ledRed: 0,

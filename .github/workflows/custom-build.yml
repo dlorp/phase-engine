@@ -24,6 +24,11 @@ on:
         required: false
         default: "0"
         type: string
+      tertiary_index:
+        description: "Index where tertiary/zone faces start (numeric, leave blank for none)"
+        required: false
+        default: ""
+        type: string
       clock_24h:
         description: "Default 24h mode"
         required: false
@@ -172,6 +177,7 @@ jobs:
         env:
           INPUT_FACES: ${{ github.event.inputs.faces }}
           INPUT_SECONDARY_INDEX: ${{ github.event.inputs.secondary_index }}
+          INPUT_TERTIARY_INDEX: ${{ github.event.inputs.tertiary_index }}
           INPUT_CLOCK_24H: ${{ github.event.inputs.clock_24h }}
           INPUT_LED_RED: ${{ github.event.inputs.led_red }}
           INPUT_LED_GREEN: ${{ github.event.inputs.led_green }}
@@ -191,9 +197,14 @@ jobs:
           INPUT_ZONE_ACTIVE_MAX: ${{ github.event.inputs.zone_active_max }}
           INPUT_ZONE_SWAP_ENABLED: ${{ github.event.inputs.zone_swap_enabled }}
         run: |
+          TERTIARY_ARGS=""
+          if [ -n "$INPUT_TERTIARY_INDEX" ]; then
+            TERTIARY_ARGS="--tertiary-index $INPUT_TERTIARY_INDEX"
+          fi
           python3 .github/scripts/generate_config.py \
             --faces "$INPUT_FACES" \
             --secondary-index "$INPUT_SECONDARY_INDEX" \
+            $TERTIARY_ARGS \
             --clock-24h "$INPUT_CLOCK_24H" \
             --led-red "$INPUT_LED_RED" \
             --led-green "$INPUT_LED_GREEN" \

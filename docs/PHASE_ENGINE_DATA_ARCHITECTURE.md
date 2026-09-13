@@ -89,22 +89,29 @@ https://api.open-meteo.com/v1/elevation
 ## File Organization
 
 ```
-second-movement/
+phase-engine/
 ├── utils/
 │   └── generate_homebase.py          # Homebase table generator
 ├── lib/
 │   └── phase/
 │       ├── homebase_table.h          # Generated homebase data
 │       └── travel_table.h            # Future: Runtime travel data
-├── movement/
-│   └── watch_faces/
-│       └── io/
-│           └── comms_face.c          # Future: UnifiedComms implementation
+├── watch-faces/
+│   ├── io/
+│   │   └── comms_face.c              # UnifiedComms (TX/RX foundation, implemented)
+│   └── complication/
+│       └── temperature_forecast_face.c  # Temperature Forecast Face (implemented)
 └── docs/
     └── PHASE_ENGINE_DATA_ARCHITECTURE.md  # This file
 ```
 
-## Future: UnifiedComms Face
+## UnifiedComms Face (Implemented — TX/RX Foundation)
+
+`watch-faces/io/comms_face.c` ships today as "Phase 2a: TX + RX Foundation"
+(TX via the FESK acoustic library, RX via optical/Manchester-encoded ambient
+light) — the sections below describe its design; treat "Future" language
+that follows as scoped to specific not-yet-built enhancements on top of
+this foundation, not the face itself.
 
 ### Features
 - Fetch 7-day forecast for new location
@@ -121,7 +128,7 @@ second-movement/
   - Return to homebase mode
   - Manual clear command
 
-## Future: Temperature Forecast Face
+## Temperature Forecast Face (Implemented)
 
 ### Purpose
 User-facing watch face to display weather forecast data fetched via UnifiedComms or at build time.
@@ -160,7 +167,7 @@ User-facing watch face to display weather forecast data fetched via UnifiedComms
 ### Integration Points
 - `lib/phase/homebase_table.h` - Read historical baseline
 - `lib/phase/travel_table.h` - Read real-time forecast (future)
-- `movement/watch_faces/complication/temperature_forecast_face.c` (future implementation)
+- `watch-faces/complication/temperature_forecast_face.c` (shipped)
 
 ## Developer Notes
 

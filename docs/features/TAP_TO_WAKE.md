@@ -190,5 +190,5 @@ Potential additions:
 
 - **LIS2DW12 Datasheet:** https://www.st.com/en/mems-and-sensors/lis2dw12.html
 - **Application Note AN5038:** Recommendations for 2g range, tap detection config
-- **second-movement movement.h:** Event type definitions (EVENT_SINGLE_TAP, EVENT_DOUBLE_TAP)
+- **movement.h:** Event type definitions (EVENT_SINGLE_TAP, EVENT_DOUBLE_TAP)
 - **Step counter PR #9:** Shows FIFO usage and motion detection coexistence

@@ -290,8 +290,8 @@ watch-library/shared/watch/
   watch_active_hours.h      // is_sleep_window(), threshold helpers
   watch_active_hours.c
 
-movement/watch_faces/complication/
-  sleep_summary_face.h      // Phase 2
+watch-faces/complication/
+  sleep_summary_face.h      // Phase 2 (not yet implemented)
   sleep_summary_face.c
 ```
 

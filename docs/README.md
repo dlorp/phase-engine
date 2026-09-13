@@ -23,6 +23,9 @@ This directory contains research, architecture, and feature documentation for th
 |----------|---------|--------------|
 | [PHASE_ENGINE_COMPLETION.md](PHASE_ENGINE_COMPLETION.md) | Phase engine testing & integration completion | 2026-02-20 |
 | [PHASE_ENGINE_DATA_ARCHITECTURE.md](PHASE_ENGINE_DATA_ARCHITECTURE.md) | Data flow, persistence, and sensor integration | 2026-02-26 |
+| [PHASE_ENGINE_PID_AUTOTUNER.md](PHASE_ENGINE_PID_AUTOTUNER.md) | Data-driven PID auto-tuner (FOPDT + IMC/Ziegler-Nichols) | 2026-08-30 |
+| [PHASE_ENGINE_INTEGER_FFT.md](PHASE_ENGINE_INTEGER_FFT.md) | Reversible integer FFT (lifting scheme) for spectral analysis | 2026-09-06 |
+| [PHASE_ENGINE_RLS_AEMA_FILTER.md](PHASE_ENGINE_RLS_AEMA_FILTER.md) | Adaptive EMA + RLS filters for the sensor pipeline | 2026-09-13 |
 
 ---
 
@@ -113,13 +116,13 @@ See [archive/](archive/) for full historical context.
 - No cloud dependencies
 - Local-first data ownership
 
-**Current Status:** Phase 4BC (Playlist Dispatch) - Active development
+**Current Status:** Phase Engine core complete (sleep tracking, circadian score, zone-based playlist controller); PID auto-tuner, integer FFT, and adaptive RLS/EMA filter added 2026-08/09 as internal library modules (see Core Documents above)
 
 ---
 
 ## Resource Impact
 
-**Flash:** ~18 KB total (~7% of 256 KB budget)  
+**Flash:** ~18 KB base Phase Engine (~7% of 256 KB budget); PID auto-tuner (+~2.1 KB) and integer FFT (+~892 B) documented separately — see their respective docs above for current per-module figures  
 **RAM:** 72 bytes total (<1% of 32 KB budget)  
 **BKUP:** 5 bytes across 2 registers  
 

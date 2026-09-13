@@ -11,12 +11,12 @@
  *   1. Adaptive EMA (AEMA) — replaces fixed-pole EMA in sensor pipeline.
  *      Adjusts smoothing based on prediction error: fast tracking during
  *      signal transitions, heavy smoothing during stable periods.
- *      State: 12 bytes. Computation: ~20 cycles/sample.
+ *      State: 16 bytes (sizeof(aema_state_t), verified). Computation: ~20 cycles/sample.
  *
  *   2. RLS Filter — Recursive Least-Squares with diagonal inverse
  *      correlation matrix. 2nd-order predictor for multi-tap signal
  *      tracking. O(N) per sample (diagonal P approximation).
- *      State: 32 bytes. Computation: ~60 cycles/sample.
+ *      State: 36 bytes (sizeof(rls_state_t), verified). Computation: ~60 cycles/sample.
  *
  * All arithmetic is integer (Q15 fixed-point where noted). No floats,
  * no divisions in the hot path (AEMA uses shift-based division).

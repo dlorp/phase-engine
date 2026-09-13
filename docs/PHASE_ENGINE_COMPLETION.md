@@ -182,7 +182,7 @@ bool my_face_loop(...) {
 **Created:** `ONLINE_BUILDER_TEST.md` (11,860 bytes)
 
 **Verified Working:**
-- ✅ Builder is live: `https://dlorp.github.io/second-movement/builder/`
+- ✅ Builder is live: `https://dlorp.github.io/phase-engine/builder/`
 - ✅ Homebase UI section present (latitude, longitude, timezone inputs)
 - ✅ GitHub Actions workflow has homebase parameters
 - ✅ Conditional homebase table generation step
@@ -521,7 +521,7 @@ User enters coords → Builder UI
 ### What Can Be Done Right Now
 
 **User Journey:**
-1. Go to `https://dlorp.github.io/second-movement/builder/`
+1. Go to `https://dlorp.github.io/phase-engine/builder/`
 2. Select "Minimal Phase" face
 3. Enter Anchorage coordinates (61.2181, -149.9003, AKST)
 4. Click "Download UF2"
