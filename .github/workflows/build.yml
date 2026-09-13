@@ -6,6 +6,9 @@ on:
     branches-ignore:
       - gh-pages
 
+permissions:
+  contents: read
+
 jobs: 
   build:
     container:
@@ -26,7 +29,7 @@ jobs:
       DISPLAY: ${{ matrix.display }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: recursive
       - name: Ensure workspace directory is defined as safe
@@ -35,7 +38,7 @@ jobs:
         run: make
         working-directory: '.'
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.board }}-display-${{ matrix.display }}-movement.uf2
           path: build/firmware.uf2
@@ -59,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: recursive
       - name: Ensure workspace directory is defined as safe
@@ -72,7 +75,7 @@ jobs:
         run: |
           tar -czf movement.tar.gz firmware.html firmware.wasm firmware.js
       - name: Upload simulator build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.board }}-display-${{ matrix.display }}-movement.tar.gz
           path: build-sim/movement.tar.gz
