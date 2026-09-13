@@ -35,8 +35,16 @@ all_flash_sizes.json
 # Priority 3 source assets (large files, not for git)
 /assets/
 
-# Session notes — local-only, never committed
+# Session notes and rework/planning docs — local-only, never committed
 SESSION_NOTES.md
+*_REWORK.md
+
+# Numbered backup files (movement.c.bak2, .bak3, etc.) — plain *.bak above
+# doesn't match these
+*.bak[0-9]*
+
+# Claude Code local session/config directory
+.claude/
 
 
 # Hardened

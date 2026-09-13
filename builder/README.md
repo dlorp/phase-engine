@@ -4,7 +4,7 @@ Web-based firmware configuration tool for Second Movement watch firmware.
 
 ## Quick Start
 
-1. **Open:** `file:///path/to/second-movement/builder/index.html` in your browser
+1. **Open:** `file:///path/to/phase-engine/builder/index.html` in your browser
 2. **Configure:** Select watch faces, adjust settings, and set homebase location
 3. **Build:** Click "Generate Firmware" to download custom firmware
 4. **Flash:** Follow flashing instructions for your hardware
@@ -215,7 +215,7 @@ make BOARD=sensorwatch_pro DISPLAY=classic PHASE_ENGINE_ENABLED=1
 
 **Fix:** Run a local web server:
 ```bash
-cd second-movement/builder
+cd phase-engine/builder
 python3 -m http.server 8000
 # Open http://localhost:8000
 ```
@@ -254,7 +254,7 @@ python3 -m http.server 8000
 
 ### Reporting Issues
 
-Found a bug? [Open an issue](https://github.com/dlorp/second-movement/issues) with:
+Found a bug? [Open an issue](https://github.com/dlorp/phase-engine/issues) with:
 - Browser version
 - Steps to reproduce
 - Expected vs actual behavior

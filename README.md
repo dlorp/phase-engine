@@ -1,6 +1,6 @@
-# Second Movement - Phase Engine Edition
+# Phase Engine
 
-A fork of [Sensor Watch](https://github.com/joeycastillo/Sensor-Watch) firmware with integrated **Phase Engine** - a circadian rhythm tracking and optimization system.
+A fork of [Second Movement](https://github.com/joeycastillo/second-movement) — the community firmware for [Sensor Watch](https://github.com/joeycastillo/Sensor-Watch) — with an integrated **Phase Engine**: a circadian rhythm tracking and optimization system.
 
 ## What is Phase Engine?
 
@@ -61,7 +61,7 @@ All calculations use **integer-only math** (no floating-point) and fit within th
 ## Differences from Upstream
 
 This fork adds:
-- Complete Phase Engine system (\`lib/phase/\`)
+- Complete Phase Engine system (`lib/phase/`)
 - 4 zone watch faces (emergence, active, momentum, descent)
 - Temperature forecast face with daylight hours
 - Smart alarm with circadian awareness
@@ -69,31 +69,30 @@ This fork adds:
 - Homebase generation tools with city presets
 - Quick settings Phase Engine toggle
 
-**Base:** Sensor Watch firmware (upstream compatible)  
-**Builder Branch:** \`phase4bc-playlist-dispatch\`
+**Base:** Sensor Watch firmware (upstream compatible)
 
 ## Quick Start
 
 ### 1. Generate Homebase Data
 
-\`\`\`bash
+```bash
 # Use city preset
 python3 utils/generate_homebase.py --city anchorage
 
 # Or custom coordinates
 python3 utils/generate_homebase.py --lat 61.2181 --lon -149.9003
-\`\`\`
+```
 
 ### 2. Build Firmware
 
-**Web Builder:** https://dlorp.github.io/second-movement/builder/index.html
+**Web Builder:** https://dlorp.github.io/phase-engine/builder/
 
-**Companion App** (for Comms Face): https://dlorp.github.io/second-movement/companion-app/#home
+**Unified Comms** (companion app, for the Comms Face — optical time-sync and audio/FSK sleep-data transfer): https://dlorp.github.io/phase-engine/companion-app/
 
 Or build locally:
-\`\`\`bash
-make BOARD=sensorwatch_blue PHASE_ENGINE_ENABLED=1
-\`\`\`
+```bash
+make BOARD=sensorwatch_blue DISPLAY=classic PHASE_ENGINE_ENABLED=1
+```
 
 ### 3. Flash to Watch
 
@@ -107,21 +106,23 @@ Follow standard Sensor Watch flashing process.
 
 ## Documentation
 
-- **Architecture:** \`docs/PHASE_ENGINE_DATA_ARCHITECTURE.md\`
-- **Homebase Generation:** \`utils/README_HOMEBASE.md\`
-- **Flash Size Audit:** \`FLASH_SIZE_AUDIT.md\`
+- **Architecture:** `docs/PHASE_ENGINE_DATA_ARCHITECTURE.md`
+- **Homebase Generation:** `utils/README_HOMEBASE.md`
+- **Flash Size Audit:** `docs/archive/root_cleanup_2026-09-13/FLASH_SIZE_AUDIT.md`
+- **Web Builder guide:** `builder/README.md`
+- **Unified Comms guide:** `companion-app/README.md`
 
 ## Building
 
 Requires [emscripten](https://emscripten.org/) for simulator builds:
 
-\`\`\`bash
+```bash
 source ~/emsdk/emsdk_env.sh
 make clean
-emmake make BOARD=sensorwatch_blue PHASE_ENGINE_ENABLED=1
-\`\`\`
+emmake make BOARD=sensorwatch_blue DISPLAY=classic PHASE_ENGINE_ENABLED=1
+```
 
-Phase Engine can be disabled at compile time by omitting \`PHASE_ENGINE_ENABLED=1\`.
+Phase Engine can be disabled at compile time by omitting `PHASE_ENGINE_ENABLED=1`.
 
 ## Credits
 
@@ -155,7 +156,7 @@ Wear both watches (Sensor Watch F91W + Bangle.js 2) on the same wrist. The F91W 
 
 ### Display
 
-5-zone HDLS layout on the Bangle's 176×176 3-bit RGB LCD:
+5-zone layout on the Bangle's 176×176 3-bit RGB LCD:
 - **Status bar** — elapsed time, sample counter, recording dot
 - **Primary reading** — HRM bpm or accel magnitude, confidence bar
 - **Sensor grid** — TEMP, PRESS, ACCEL, GPS with current values

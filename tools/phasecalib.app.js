@@ -85,7 +85,7 @@ var minmax = {
   accel: { min: 99, max: 0 }
 };
 
-// ── HDLS Colors (3-bit RGB LCD) ────────────────────────────
+// ── Colors (3-bit RGB LCD) ──────────────────────────────────
 var AMBER  = "#FFD700";  // yellow (110)
 var CYAN   = "#00FFFF";  // cyan (011)
 var WHITE  = "#FFFFFF";  // white (111)

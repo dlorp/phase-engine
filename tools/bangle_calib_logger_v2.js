@@ -1,11 +1,10 @@
 /*
  * Phase Engine Calibration Logger v2 — Bangle.js 2
  * ==================================================
- * HDLS-branded 5-zone UI with warm grayscale palette.
+ * 5-zone UI with warm grayscale palette.
  * Records multi-sensor data to CSV for cross-referencing
  * against the Sensor Watch F91W Phase Engine firmware.
  *
- * Design: 0r4cl3 spec → r3nd3r visual production → spl1c3 assembly
  * Date:    2026-05-29
  *
  * Usage:
@@ -29,7 +28,7 @@
 
 
 // ═══════════════════════════════════════════════════════════
-// 1. LAUNCHER ICON — r3nd3r production · 48×48
+// 1. LAUNCHER ICON — 48×48
 //    Amber (#FFB800) on Root Dark (#0E0B02)
 //    Pulse waveform + sensor-eye reticle at QRS peak
 // ═══════════════════════════════════════════════════════════
@@ -82,7 +81,7 @@ function drawIcon(g) {
 
 // ═══════════════════════════════════════════════════════════
 // 2. COLOR PALETTE — Bangle.js 3-bit LCD mapping
-//    Warm grayscale stops, HDLS-named, even luminance distribution
+//    Warm grayscale stops, named constants, even luminance distribution
 //    Use C.<NAME> with setC() throughout — never bare g.setColor
 // ═══════════════════════════════════════════════════════════
 
@@ -860,6 +859,5 @@ setTimeout(startRecording, 1500);
 
 // ═══════════════════════════════════════════════════════════
 // END — bangle_calib_logger_v2.js
-// Design: 0r4cl3 → r3nd3r → spl1c3 · 2026-05-29
-// Brand: HDLS amber phosphor on 3-bit reflective LCD
+// 2026-05-29 · amber phosphor palette on 3-bit reflective LCD
 // ═══════════════════════════════════════════════════════════

@@ -1,2 +1,0 @@
-   text	   data	    bss	    dec	    hex	filename
- 153532	   2812	   7028	 163372	  27e2c	build/firmware.elf
