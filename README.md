@@ -4,7 +4,7 @@ A fork of [Second Movement](https://github.com/joeycastillo/second-movement) —
 
 ## What is Phase Engine?
 
-Phase Engine transforms your Sensor Watch into a **circadian awareness tool**, tracking your daily rhythm through four natural phases and providing intelligent feedback to optimize your energy and productivity.
+Phase Engine turns your Sensor Watch into a **circadian awareness tool**: it tracks your daily rhythm through four natural phases and shows your current phase and a daily alignment score.
 
 ### The Four Phases
 
