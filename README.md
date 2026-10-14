@@ -1,5 +1,10 @@
 # Phase Engine
 
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE.md)
+[![Build](https://img.shields.io/github/actions/workflow/status/dlorp/phase-engine/build.yml?label=build)](https://github.com/dlorp/phase-engine/actions/workflows/build.yml)
+[![Platform](https://img.shields.io/badge/platform-Sensor%20Watch-lightgrey)](https://www.sensorwatch.net/)
+[![Upstream](https://img.shields.io/badge/fork-second--movement-blue)](https://github.com/joeycastillo/second-movement)
+
 A fork of [Second Movement](https://github.com/joeycastillo/second-movement) — the community firmware for [Sensor Watch](https://github.com/joeycastillo/Sensor-Watch) — with an integrated **Phase Engine**: a circadian rhythm tracking and optimization system.
 
 ## What is Phase Engine?
