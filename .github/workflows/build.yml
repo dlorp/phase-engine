@@ -12,7 +12,8 @@ permissions:
 jobs: 
   build:
     container:
-      image: ghcr.io/armmbed/mbed-os-env:latest
+      # Pinned by digest: image built 2022-05-21, ARM GCC 10.3-2021.07.
+      image: ghcr.io/armmbed/mbed-os-env:latest@sha256:302695f5fd9aeb3912f5ed1b9b2e3d6266d9ed8e9c6bfe29f70b77fe20ffced4
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,7 +46,8 @@ jobs:
 
   build-simulator:
     container:
-      image: emscripten/emsdk
+      # Pinned by digest: Emscripten 6.0.12, multi-arch index (amd64 + arm64).
+      image: emscripten/emsdk:6.0.12@sha256:77638e6c215a65f25a704c0c831d5c2463a8c0468a58c6cb82489dbe621dfa05
     strategy:
       matrix:
         board:
